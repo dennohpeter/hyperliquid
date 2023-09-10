@@ -1,0 +1,18 @@
+[package]
+name = "hyperliquid"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Dennoh Peter <mail@dennohpeter.com>"]
+description = "A Rust library for the Hyperliquid API"
+homepage = "https://hyperliquid.xyz/"
+categories = ["api-bindings", "cryptography::cryptocurrencies", "finance"]
+repository = "https://github.com/dennohpeter/hyperliquid"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+error-chain = { version = "0.12.4", default-features = false }
+ethers = { version = "2.0.10", features = ["eip712"] }
+reqwest = { version = "0.11.20", features = ["json"] }
+serde = "1.0.188"
