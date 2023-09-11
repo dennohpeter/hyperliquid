@@ -1,10 +1,9 @@
 ## Examples
+- [x] Info
 
-[x] Info
+- [x] Exchange
 
-[x] Exchange
-
-[ ] Websocket
+- [ ] Websocket
 
 ## Usage
 
