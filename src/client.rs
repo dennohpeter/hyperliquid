@@ -36,7 +36,7 @@ impl Client {
             .send()
             .await?;
 
-        self.handler(response)
+        self.handler(response).await
     }
 }
 
@@ -47,10 +47,7 @@ impl Client {
         headers
     }
 
-    fn handler<T: DeserializeOwned>(&self, response: Response) -> Result<T> {
-        println!("{:#?}", response);
-        todo!("handle response")
-        // match response.status() {
-        // }
+    async fn handler<T: DeserializeOwned>(&self, response: Response) -> Result<T> {
+        response.json::<T>().await.map_err(Into::into)
     }
 }

@@ -7,10 +7,10 @@ use crate::{
     client::Client,
     errors::Result,
     types::{
-        request::info::{CandleInterval, CandleSnapshotRequest, Request},
+        request::info::{CandleSnapshotRequest, Request},
         response::info::{
-            CandleSnapshot, FundingHistory, Level, OpenOrder, Universe, UserFill, UserFunding,
-            UserState,
+            AssetContext, CandleSnapshot, FundingHistory, L2Book, OpenOrder, Universe, UserFill,
+            UserFunding, UserState,
         },
         Chain,
     },
@@ -35,14 +35,16 @@ impl Info {
     }
 
     /// Retrieve asset contexts i.e mark price, current funding, open interest, etc
-    pub async fn contexts(&self) -> Result<()> {
-        todo!()
+    pub async fn contexts(&self) -> Result<Vec<AssetContext>> {
+        self.client
+            .post(&API::Info, &Request::MetaAndAssetCtxs)
+            .await
     }
 
     /// Retrieve a user's state to see user's open positions and margin summary
     pub async fn user_state(&self, user: Address) -> Result<UserState> {
         self.client
-            .post(&API::Info, &Request::ClearingHouseState { user })
+            .post(&API::Info, &Request::ClearinghouseState { user })
             .await
     }
 
@@ -99,7 +101,7 @@ impl Info {
     }
 
     /// Retrieve the L2 order book for a coin
-    pub async fn l2_book(&self, coin: String) -> Result<Vec<Vec<Level>>> {
+    pub async fn l2_book(&self, coin: String) -> Result<L2Book> {
         self.client
             .post(&API::Info, &Request::L2Book { coin })
             .await
@@ -109,7 +111,7 @@ impl Info {
     pub async fn candle_snapshot(
         &self,
         coin: String,
-        interval: CandleInterval,
+        interval: String,
         start_time: u64,
         end_time: u64,
     ) -> Result<Vec<CandleSnapshot>> {

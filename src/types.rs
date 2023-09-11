@@ -15,22 +15,10 @@ pub mod request {
         use serde::Serialize;
 
         #[derive(Serialize)]
-        pub enum CandleInterval {
-            #[serde(rename = "1m")]
-            OneMinute,
-            #[serde(rename = "15m")]
-            FifteenMinutes,
-            #[serde(rename = "1h")]
-            OneHour,
-            #[serde(rename = "1d")]
-            OneDay,
-        }
-
-        #[derive(Serialize)]
         #[serde(rename_all = "camelCase")]
         pub struct CandleSnapshotRequest {
             pub coin: String,
-            pub interval: CandleInterval,
+            pub interval: String,
             pub start_time: u64,
             pub end_time: u64,
         }
@@ -40,7 +28,8 @@ pub mod request {
         pub enum Request {
             Meta,
             AllMids,
-            ClearingHouseState {
+            MetaAndAssetCtxs,
+            ClearinghouseState {
                 user: Address,
             },
             OpenOrders {
@@ -49,11 +38,13 @@ pub mod request {
             UserFills {
                 user: Address,
             },
+            #[serde(rename_all = "camelCase")]
             UserFunding {
                 user: Address,
                 start_time: u64,
                 end_time: Option<u64>,
             },
+            #[serde(rename_all = "camelCase")]
             FundingHistory {
                 coin: String,
                 start_time: u64,
@@ -228,34 +219,48 @@ pub mod response {
     pub mod info {
         use serde::Deserialize;
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Asset {
             pub name: String,
             pub sz_decimals: u32,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Universe {
             pub universe: Vec<Asset>,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
-        pub enum Contexts {
-            Meta(Universe),
-            // AssetCtxs(Vec<AssetCtx>),
+        pub struct Ctx {
+            pub day_ntl_vlm: String,
+            pub funding: String,
+            pub impact_pxs: Vec<String>,
+            pub mark_px: String,
+            pub mid_px: String,
+            pub open_interest: String,
+            pub oracle_px: String,
+            pub premium: String,
+            pub prev_day_px: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
+        #[serde(untagged)]
+        pub enum AssetContext {
+            Meta(Universe),
+            Ctx(Vec<Ctx>),
+        }
+
+        #[derive(Deserialize, Debug)]
         pub struct Leverage {
             #[serde(rename = "type")]
             pub type_: String,
             pub value: u32,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
 
         pub struct Position {
@@ -271,7 +276,7 @@ pub mod response {
             pub unrealized_pnl: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct AssetPosition {
             pub position: Position,
@@ -279,7 +284,7 @@ pub mod response {
             pub type_: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct MarginSummary {
             pub account_value: String,
@@ -288,7 +293,7 @@ pub mod response {
             pub total_raw_usd: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct UserState {
             pub asset_positions: Vec<AssetPosition>,
@@ -297,14 +302,14 @@ pub mod response {
             pub withdrawable: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "UPPERCASE")]
         pub enum Side {
             B,
             A,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct OpenOrder {
             pub coin: String,
@@ -315,7 +320,7 @@ pub mod response {
             pub timestamp: u64,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct UserFill {
             pub closed_pnl: String,
@@ -331,7 +336,7 @@ pub mod response {
             pub time: u64,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Delta {
             pub coin: String,
@@ -342,7 +347,7 @@ pub mod response {
             pub usdc: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct UserFunding {
             pub delta: Delta,
@@ -350,7 +355,7 @@ pub mod response {
             pub time: u64,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct FundingHistory {
             pub coin: String,
@@ -359,7 +364,7 @@ pub mod response {
             pub time: u64,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Level {
             pub px: String,
@@ -367,7 +372,14 @@ pub mod response {
             pub n: u64,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
+        pub struct L2Book {
+            pub coin: String,
+            pub levels: Vec<Vec<Level>>,
+            pub time: u64,
+        }
+
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct CandleSnapshot {
             #[serde(rename = "T")]
