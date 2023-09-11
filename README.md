@@ -16,7 +16,7 @@ A Rust library for Hyperliquid API
 ```toml
 [dependencies]
 
-hyperliquid = { version = "0.1.0" }
+hyperliquid = { version = "0.0.0" }
 ```
 
 ### Usage
@@ -42,4 +42,4 @@ async fn main() {
 
 ### Examples
 
-See `examples/` for examples. You can run any example with `cargo run --example <example_name>`
+See `examples/` for examples. You can run any example with `cargo run --example <example_name>`.
