@@ -16,6 +16,8 @@ async fn main() {
 
     let info = Hyperliquid::new(wallet, Chain::Dev);
 
+    println!("Info API Examples");
+
     metadata(&info).await;
     mids(&info).await;
     contexts(&info).await;
@@ -30,7 +32,7 @@ async fn main() {
 
 async fn metadata(info: &Info) {
     let metadata = info.metadata().await.unwrap();
-    println!("Metadata \n{:?}{SEP}", metadata.universe);
+    println!("{SEP}\nMetadata \n{:?}{SEP}", metadata.universe);
 }
 
 async fn mids(info: &Info) {
