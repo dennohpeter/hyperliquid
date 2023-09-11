@@ -39,3 +39,7 @@ async fn main() {
     println!("Metadata \n{:?}", metadata.universe);
 }
 ```
+
+### Examples
+
+See `examples/` for examples. You can run any example with `cargo run --example <example_name>`
