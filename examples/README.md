@@ -1,4 +1,5 @@
 ## Examples
+
 - [x] Info
 
 - [x] Exchange
@@ -8,13 +9,13 @@
 ## Usage
 
 ```bash
-$ cargo run --release --example info
+cargo run --release --example info
 ```
 
 ```bash
-$ cargo run --release --example exchange
+cargo run --release --example exchange
 ```
 
 ```bash
-$ cargo run --release --example websocket
+cargo run --release --example websocket
 ```
