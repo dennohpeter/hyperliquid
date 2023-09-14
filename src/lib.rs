@@ -1,10 +1,15 @@
-pub mod agent;
-pub mod api;
-pub mod client;
-pub mod config;
-pub mod errors;
-pub mod exchange;
-pub mod info;
-pub mod types;
-pub mod utils;
-pub mod ws;
+mod agent;
+mod api;
+mod client;
+mod config;
+mod errors;
+mod exchange;
+mod info;
+mod types;
+mod utils;
+mod ws;
+
+pub use api::{Hyperliquid, API};
+pub use exchange::Exchange;
+pub use info::Info;
+pub use types::{request::*, response::*, Chain};

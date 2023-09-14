@@ -1,5 +1,5 @@
 use ethers::{signers::LocalWallet, types::Address};
-use hyperliquid::{api::Hyperliquid, info::Info, types::Chain};
+use hyperliquid::{Chain, Hyperliquid, Info};
 
 const SEP: &str = "\n---";
 
