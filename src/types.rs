@@ -443,3 +443,80 @@ pub mod response {
         }
     }
 }
+
+pub mod ws {
+    use std::collections::HashMap;
+
+    use ethers::types::Address;
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Serialize, Debug)]
+    #[serde(rename_all = "camelCase", tag = "type")]
+    pub enum Subscription {
+        AllMids,
+        Notification { user: Address },
+        WebData { user: Address },
+        Candle { coin: String, interval: String },
+        L2Book { coin: String },
+        Trades { coin: String },
+        OrderUpdates { user: Address },
+    }
+
+    #[derive(Serialize, Debug)]
+    #[serde(rename_all = "lowercase")]
+    pub enum Method {
+        Subscribe,
+        Unsubscribe,
+    }
+
+    #[derive(Serialize, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct Request {
+        pub subscription: Subscription,
+        pub method: Method,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct AllMids {
+        pub mids: HashMap<String, String>,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct Notification {
+        pub notification: String,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct WsTrade {
+        pub coin: String,
+        pub side: String,
+        pub px: String,
+        pub sz: String,
+        pub hash: String,
+        pub time: u128,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct WsLevel {
+        pub px: String,
+        pub sz: String,
+        pub n: u64,
+    }
+
+    #[derive(Deserialize, Debug)]
+    pub struct WsBook {
+        pub coin: String,
+        pub levels: Vec<Vec<WsLevel>>,
+        pub time: u128,
+    }
+
+    #[derive(Deserialize, Debug)]
+    #[serde(rename_all = "camelCase", tag = "channel", content = "data")]
+    pub enum Event {
+        AllMids(AllMids),
+        Notification(Notification),
+        WebData(String),
+        WsTrade(Vec<WsTrade>),
+        WsBook(WsBook),
+    }
+}

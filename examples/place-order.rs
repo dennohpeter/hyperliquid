@@ -1,5 +1,6 @@
 use ethers::signers::LocalWallet;
 use hyperliquid::{
+    parse_price, parse_size,
     request::exchange::{Limit, OrderRequest, OrderType, Tif},
     Chain, Exchange, Hyperliquid,
 };
@@ -13,14 +14,17 @@ async fn main() {
 
     let exchange: Exchange = Hyperliquid::new(wallet, Chain::Dev);
 
+    let asset = 4;
+    let sz_decimals = 4;
+
     let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
 
     let order = OrderRequest {
-        asset: 4,
+        asset,
         is_buy: true,
         reduce_only: false,
-        limit_px: "1700".to_string(),
-        sz: "0.1".to_string(),
+        limit_px: parse_price(1700.0),
+        sz: parse_size(0.01, sz_decimals),
         order_type,
     };
 

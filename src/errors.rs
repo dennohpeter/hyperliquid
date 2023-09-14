@@ -5,5 +5,6 @@ error_chain! {
         Reqwest(reqwest::Error);
         TimestampError(std::time::SystemTimeError);
         WalletError(ethers::signers::WalletError);
+
     }
 }
