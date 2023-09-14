@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Clone, Copy, Serialize)]
+#[derive(Clone, Copy, Serialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub enum Chain {
     Dev = 1337,
@@ -14,7 +14,7 @@ pub mod request {
         use ethers::types::Address;
         use serde::Serialize;
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct CandleSnapshotRequest {
             pub coin: String,
@@ -23,7 +23,7 @@ pub mod request {
             pub end_time: u64,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase", tag = "type")]
         pub enum Request {
             Meta,
@@ -68,7 +68,7 @@ pub mod request {
 
         use crate::types::Chain;
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
         pub enum Tif {
             Gtc,
@@ -76,20 +76,20 @@ pub mod request {
             Alo,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Limit {
             pub tif: Tif,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "lowercase")]
         pub enum TpSl {
             Tp,
             Sl,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Trigger {
             pub trigger_px: String,
@@ -97,14 +97,14 @@ pub mod request {
             pub tpsl: TpSl,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub enum OrderType {
             Limit(Limit),
             Trigger(Trigger),
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderRequest {
             pub asset: u32,
@@ -133,7 +133,7 @@ pub mod request {
             }
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub enum Grouping {
             Na = 0,
@@ -146,29 +146,29 @@ pub mod request {
             }
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct CancelRequest {
             pub oid: u64,
             pub asset: u32,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct TransferRequest {
             pub destination: Address,
             pub amount: String,
-            pub time: u64,
+            pub time: u128,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Agent {
             pub source: String,
             pub connection_id: String,
         }
 
-        #[derive(Serialize)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase", tag = "type")]
         pub enum Action {
             Order {
@@ -203,8 +203,8 @@ pub mod request {
             },
         }
 
-        #[derive(Serialize)]
-        #[serde(rename_all = "camelCase", tag = "type")]
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
         pub struct Request {
             pub action: Action,
             pub nonce: u128,
@@ -399,12 +399,12 @@ pub mod response {
     pub mod exchange {
         use serde::Deserialize;
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         pub struct Resting {
             pub oid: u64,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Filled {
             pub oid: u64,
@@ -412,7 +412,7 @@ pub mod response {
             pub avg_px: String,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub enum Status {
             Resting(Resting),
@@ -423,19 +423,19 @@ pub mod response {
             WaitingForTrigger,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         pub struct Statuses {
             pub statuses: Vec<Status>,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         pub struct Data {
             #[serde(rename = "type")]
             pub type_: String,
             pub data: Option<Statuses>,
         }
 
-        #[derive(Deserialize)]
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase", tag = "status", content = "response")]
         pub enum Response {
             Ok(Data),

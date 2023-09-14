@@ -86,8 +86,14 @@ impl Exchange {
     }
 
     /// L1 USDC transfer
-    pub async fn usdc_transfer(&self, payload: TransferRequest) -> Result<Response> {
+    pub async fn usdc_transfer(&self, destination: Address, amount: String) -> Result<Response> {
         let nonce = self.timestamp()?;
+
+        let payload = TransferRequest {
+            amount,
+            destination,
+            time: nonce,
+        };
 
         let action = Action::UsdTransfer {
             chain: self.chain,
