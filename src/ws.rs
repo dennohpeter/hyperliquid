@@ -1,1 +1,3 @@
-pub fn main() {}
+pub fn main() {
+    todo!("Implement websocket");
+}
