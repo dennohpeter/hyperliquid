@@ -32,7 +32,7 @@ async fn main() {
 
     let wallet = None;
 
-    let info:Info = Hyperliquid::new(wallet, Chain::Dev);
+    let info:Info = Hyperliquid::new(wallet, Dev);
 
     // Retrieve exchange metadata
     let metadata = info.metadata().await.unwrap();

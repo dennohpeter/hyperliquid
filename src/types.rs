@@ -3,9 +3,9 @@ use serde::Serialize;
 #[derive(Clone, Copy, Serialize, Debug)]
 #[serde(rename_all = "PascalCase")]
 pub enum Chain {
-    Dev = 1337,
-    Arbitrum = 42161,
-    ArbitrumGoerli = 421613,
+    Dev,
+    Arbitrum,
+    ArbitrumGoerli,
 }
 
 pub mod request {
@@ -63,7 +63,7 @@ pub mod request {
         }
     }
     pub mod exchange {
-        use ethers::types::{Address, Signature};
+        use ethers::types::{Address, Signature, H256};
         use serde::Serialize;
 
         use crate::types::Chain;
@@ -165,7 +165,7 @@ pub mod request {
         #[serde(rename_all = "camelCase")]
         pub struct Agent {
             pub source: String,
-            pub connection_id: String,
+            pub connection_id: H256,
         }
 
         #[derive(Serialize, Debug)]
@@ -186,16 +186,19 @@ pub mod request {
                 usd: String,
                 nonce: u128,
             },
+            #[serde(rename_all = "camelCase")]
             UpdateLeverage {
                 asset: u32,
                 leverage: u32,
                 is_cross: bool,
             },
+            #[serde(rename_all = "camelCase")]
             UpdateIsolatedMargin {
                 asset: u32,
                 is_buy: bool,
-                ntli: String,
+                ntli: i64,
             },
+            #[serde(rename_all = "camelCase", rename = "connect")]
             ApproveAgent {
                 chain: Chain,
                 agent: Agent,

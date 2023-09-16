@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::{sync::Arc, time::SystemTime};
 
 use ethers::{
     abi::AbiEncode,
@@ -25,7 +25,7 @@ use crate::{
 /// Endpoint to interact with and trade on the Hyperliquid chain.
 pub struct Exchange {
     pub client: Client,
-    pub wallet: LocalWallet,
+    pub wallet: Arc<LocalWallet>,
     pub chain: Chain,
 }
 
@@ -42,9 +42,9 @@ impl Exchange {
             grouping: Grouping::Na,
             orders: vec![order],
         };
-        let vault_address = vault_address.unwrap_or_default();
 
-        let connection_id = self.connection_id(&action, vault_address, nonce)?;
+        let connection_id =
+            self.connection_id(&action, vault_address.unwrap_or_default(), nonce)?;
 
         let signature = self.sign(connection_id).await?;
 
@@ -52,7 +52,7 @@ impl Exchange {
             action,
             nonce,
             signature,
-            vault_address: Some(vault_address),
+            vault_address,
         };
 
         self.client.post(&API::Exchange, &request).await
@@ -164,7 +164,7 @@ impl Exchange {
     }
 
     /// Update isolated margin for a given asset
-    pub async fn update_isolated_margin(&self, margin: String, asset: u32) -> Result<Response> {
+    pub async fn update_isolated_margin(&self, margin: i64, asset: u32) -> Result<Response> {
         let nonce = self.timestamp()?;
 
         let action = Action::UpdateIsolatedMargin {
@@ -191,16 +191,19 @@ impl Exchange {
     pub async fn approve_agent(&self, agent_address: Address) -> Result<Response> {
         let nonce = self.timestamp()?;
 
+        let connection_id = keccak256(agent_address.encode()).into();
+
         let action = Action::ApproveAgent {
-            chain: self.chain,
+            chain: match self.chain {
+                Chain::Arbitrum => Chain::Arbitrum,
+                Chain::Dev | Chain::ArbitrumGoerli => Chain::ArbitrumGoerli,
+            },
             agent: Agent {
                 source: "https://hyperliquid.xyz".to_string(),
-                connection_id: "".to_string(),
+                connection_id,
             },
             agent_address,
         };
-
-        let connection_id = self.connection_id(&action, Address::zero(), nonce)?;
 
         let signature = self.sign(connection_id).await?;
 
@@ -276,21 +279,21 @@ impl Exchange {
         Ok(match self.chain {
             Chain::Arbitrum => {
                 let payload = mainnet::Agent {
-                    source: "a".to_string(),
+                    source: "b".to_string(),
                     connection_id,
                 };
                 self.wallet.sign_typed_data(&payload).await?
             }
             Chain::ArbitrumGoerli => {
                 let payload = testnet::Agent {
-                    source: "a".to_string(),
+                    source: "b".to_string(),
                     connection_id,
                 };
                 self.wallet.sign_typed_data(&payload).await?
             }
             Chain::Dev => {
                 let payload = l1::Agent {
-                    source: "a".to_string(),
+                    source: "b".to_string(),
                     connection_id,
                 };
 

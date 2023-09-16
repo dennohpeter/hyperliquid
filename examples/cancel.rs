@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ethers::signers::LocalWallet;
 use hyperliquid::{
     request::exchange::{CancelRequest, Limit, OrderRequest, OrderType, Tif},
@@ -8,11 +10,13 @@ use hyperliquid::{
 #[tokio::main]
 async fn main() {
     // Key was randomly generated for testing and shouldn't be used with any real funds
-    let wallet: LocalWallet = "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
-        .parse()
-        .unwrap();
+    let wallet: Arc<LocalWallet> = Arc::new(
+        "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
+            .parse()
+            .unwrap(),
+    );
 
-    let exchange: Exchange = Hyperliquid::new(wallet, Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(wallet.clone(), Chain::Dev);
 
     let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
 

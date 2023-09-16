@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ethers::signers::LocalWallet;
 use hyperliquid::{
     parse_price, parse_size,
@@ -12,7 +14,7 @@ async fn main() {
         .parse()
         .unwrap();
 
-    let exchange: Exchange = Hyperliquid::new(wallet, Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Arc::new(wallet), Chain::Dev);
 
     let asset = 4;
     let sz_decimals = 4;

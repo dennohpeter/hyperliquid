@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ethers::signers::LocalWallet;
 
 use crate::{client::Client, config::Config, exchange::Exchange, info::Info, types::Chain};
@@ -17,15 +19,15 @@ impl From<&API> for String {
 }
 
 pub trait Hyperliquid {
-    fn new(wallet: LocalWallet, chain: Chain) -> Self;
-    fn new_with_config(wallet: LocalWallet, chain: Chain, config: &Config) -> Self;
+    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self;
+    fn new_with_config(wallet: Arc<LocalWallet>, chain: Chain, config: &Config) -> Self;
 }
 
 impl Hyperliquid for Info {
-    fn new(wallet: LocalWallet, chain: Chain) -> Self {
+    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self {
         Self::new_with_config(wallet, chain, &Config::default())
     }
-    fn new_with_config(wallet: LocalWallet, chain: Chain, config: &Config) -> Self {
+    fn new_with_config(wallet: Arc<LocalWallet>, chain: Chain, config: &Config) -> Self {
         Self {
             wallet,
             chain,
@@ -35,10 +37,10 @@ impl Hyperliquid for Info {
 }
 
 impl Hyperliquid for Exchange {
-    fn new(wallet: LocalWallet, chain: Chain) -> Self {
+    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self {
         Self::new_with_config(wallet, chain, &Config::default())
     }
-    fn new_with_config(wallet: LocalWallet, chain: Chain, config: &Config) -> Self {
+    fn new_with_config(wallet: Arc<LocalWallet>, chain: Chain, config: &Config) -> Self {
         Self {
             wallet,
             chain,

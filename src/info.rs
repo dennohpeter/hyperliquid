@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use ethers::{signers::LocalWallet, types::Address};
 
@@ -19,7 +19,7 @@ use crate::{
 /// Endpoint to fetch information about the exchange and specific users.
 pub struct Info {
     pub client: Client,
-    pub wallet: LocalWallet,
+    pub wallet: Arc<LocalWallet>,
     pub chain: Chain,
 }
 

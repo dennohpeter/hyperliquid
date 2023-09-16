@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ethers::signers::LocalWallet;
 use hyperliquid::{Chain, Exchange, Hyperliquid};
 
@@ -8,7 +10,7 @@ async fn main() {
         .parse()
         .unwrap();
 
-    let exchange: Exchange = Hyperliquid::new(wallet, Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Arc::new(wallet), Chain::Dev);
 
     let destination = "0x0D1d9635D0640821d15e323ac8AdADfA9c111414"
         .parse()

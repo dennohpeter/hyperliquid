@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ethers::{signers::LocalWallet, types::Address};
 use hyperliquid::{Chain, Hyperliquid, Info};
 
@@ -14,7 +16,7 @@ async fn main() {
         .parse()
         .expect("Invalid address");
 
-    let info = Hyperliquid::new(wallet, Chain::Dev);
+    let info = Hyperliquid::new(Arc::new(wallet), Chain::Dev);
 
     println!("Info API Examples");
 
