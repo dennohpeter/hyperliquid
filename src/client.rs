@@ -4,7 +4,7 @@ use reqwest::{
 };
 use serde::{de::DeserializeOwned, ser::Serialize};
 
-use crate::{api::API, errors::Result};
+use crate::{api::API, error::Result};
 
 pub struct Client {
     inner_client: reqwest::Client,

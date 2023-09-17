@@ -1,8 +1,10 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use ethers::signers::LocalWallet;
 
-use crate::{client::Client, config::Config, exchange::Exchange, info::Info, types::Chain};
+use crate::{
+    client::Client, config::Config, exchange::Exchange, info::Info, types::Chain, Websocket,
+};
 
 pub enum API {
     Info,
@@ -45,6 +47,20 @@ impl Hyperliquid for Exchange {
             wallet,
             chain,
             client: Client::new(config.rest_endpoint.clone()),
+        }
+    }
+}
+
+impl Hyperliquid for Websocket {
+    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self {
+        Self::new_with_config(wallet, chain, &Config::default())
+    }
+    fn new_with_config(wallet: Arc<LocalWallet>, _chain: Chain, config: &Config) -> Self {
+        Self {
+            wallet,
+            url: config.ws_endpoint.clone(),
+            stream: None,
+            channels: HashMap::new(),
         }
     }
 }

@@ -5,7 +5,7 @@ use ethers::{signers::LocalWallet, types::Address};
 use crate::{
     api::API,
     client::Client,
-    errors::Result,
+    error::Result,
     types::{
         request::info::{CandleSnapshotRequest, Request},
         response::info::{

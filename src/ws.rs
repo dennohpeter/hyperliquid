@@ -1,89 +1,138 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::{collections::HashMap, sync::Arc};
 
-use error_chain::bail;
-use ethers::providers::StreamExt;
+use ethers::signers::LocalWallet;
+use futures_util::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
-use tokio_tungstenite::{
-    connect_async,
-    tungstenite::{handshake::client::Response, Message},
-    MaybeTlsStream, WebSocketStream,
+use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
+
+use crate::{
+    error::{Error, Result},
+    types::ws::{Event, Subscription},
+    Method, Request,
 };
 
-use crate::{errors::Result, types::ws::Event};
-
 pub struct Websocket {
-    socket: Option<(WebSocketStream<MaybeTlsStream<TcpStream>>, Response)>,
-    handler: Box<dyn FnMut(Event) -> Result<()>>,
+    pub stream: Option<WebSocketStream<MaybeTlsStream<TcpStream>>>,
+    pub channels: HashMap<u64, Subscription>,
+    pub wallet: Arc<LocalWallet>,
+    pub url: String,
 }
 
 impl Websocket {
-    pub fn new<C>(handler: C) -> Self
-    where
-        C: FnMut(Event) -> Result<()> + 'static,
-    {
-        Self {
-            socket: None,
-            handler: Box::new(handler),
-        }
+    /// Returns `true` if the websocket is connected
+    pub async fn is_connected(&self) -> bool {
+        self.stream.is_some()
     }
 
-    pub async fn connect(&mut self, url: &str) -> Result<()> {
-        self.connect_wss(url).await
+    /// Connect to the websocket
+    pub async fn connect(&mut self) -> Result<()> {
+        let (stream, _) = connect_async(&self.url).await?;
+        self.stream = Some(stream);
+
+        Ok(())
     }
 
+    /// Disconnect from the websocket
     pub async fn disconnect(&mut self) -> Result<()> {
-        if let Some((socket, _)) = &mut self.socket {
-            let _ = socket.close(None).await;
+        // let _res = self.send(&[()], false).await;
+
+        self.stream = None;
+
+        Ok(())
+    }
+
+    /// Subscribe to the given channels
+    /// - `channels` - The channels to subscribe to
+    pub async fn subscribe(&mut self, channels: Vec<(Subscription, u64)>) -> Result<()> {
+        self.send(&channels, true).await?;
+
+        channels.into_iter().for_each(|(channel, id)| {
+            self.channels.insert(id, channel);
+        });
+
+        Ok(())
+    }
+
+    /// Unsubscribe from the given channels
+    /// - `channels` - The channels to unsubscribe from
+    pub async fn unsubscribe(&mut self, channels: &Vec<(Subscription, u64)>) -> Result<()> {
+        for (_, id) in channels {
+            if !self.channels.contains_key(id) {
+                return Err(Error::NotSubscribed(*id));
+            }
+        }
+
+        self.send(channels, false).await?;
+
+        channels.into_iter().for_each(|(_, id)| {
+            self.channels.remove(id);
+        });
+
+        Ok(())
+    }
+
+    /// Unsubscribe from all channels
+    pub async fn unsubscribe_all(&mut self) -> Result<()> {
+        let channels: Vec<(Subscription, u64)> = self
+            .channels
+            .clone()
+            .into_iter()
+            .map(|(id, channel)| (channel, id))
+            .collect();
+
+        self.send(&channels, false).await
+    }
+
+    /// Send a message request
+    /// - `subscriptions` is a list of subscriptions to send
+    pub async fn send(
+        &mut self,
+        subscriptions: &Vec<(Subscription, u64)>,
+        subscribe: bool,
+    ) -> Result<()> {
+        if let Some(stream) = &mut self.stream {
+            for (subscription, _) in subscriptions {
+                let method = if subscribe {
+                    Method::Subscribe
+                } else {
+                    Method::Unsubscribe
+                };
+
+                let request = Request {
+                    method,
+                    subscription: subscription.clone(),
+                };
+
+                let message = Message::Text(serde_json::to_string(&request)?);
+
+                stream.send(message).await?;
+            }
 
             return Ok(());
         }
 
-        bail!("No socket to disconnect");
+        Err(Error::NotConnected)
     }
 
-    async fn connect_wss(&mut self, url: &str) -> Result<()> {
-        match connect_async(url).await {
-            Ok(answer) => {
-                self.socket = Some(answer);
+    pub async fn next<Callback>(&mut self, handler: Callback) -> Result<Option<bool>>
+    where
+        Callback: Fn(Event) -> Result<()>,
+    {
+        if let Some(stream) = &mut self.stream {
+            while let Some(message) = stream.next().await {
+                let message = message?;
 
-                Ok(())
-            }
-            Err(e) => {
-                bail!("Error during handshake: {}", e);
-            }
-        }
-    }
-
-    pub async fn event_loop(&mut self, running: &AtomicBool) -> Result<()> {
-        if let Some((socket, _)) = &mut self.socket {
-            let (_, mut reader) = socket.split();
-
-            while running.load(Ordering::Relaxed) {
-                let msg = reader
-                    .next()
-                    .await
-                    .ok_or("Reader data not found")?
-                    .map_err(|e| format!("Failed to read websocket message: {}", e))?;
-
-                match msg {
-                    Message::Text(t) => {
-                        let event: Event = serde_json::from_str(&t).map_err(|e| {
-                            format!("Failed to deserialize websocket text: {t:?} ({e})")
-                        })?;
-
-                        (self.handler)(event)?;
+                if let Message::Text(text) = message {
+                    if !text.starts_with('{') {
+                        continue;
                     }
-                    Message::Ping(_) => {
-                        // writer.write_message(Message::Pong(vec![]))?;
-                        // writer.send(Message::Pong(vec![])).await?;
-                        println!("Ping");
-                    }
-                    Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => {}
-                    Message::Close(e) => bail!("Disconnected: {:?}", e),
+                    let event = serde_json::from_str(&text)?;
+
+                    (handler)(event)?;
                 }
             }
         }
 
-        Ok(())
+        Ok(None)
     }
 }

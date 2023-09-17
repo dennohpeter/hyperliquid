@@ -11,7 +11,7 @@ use crate::{
     agent::{l1, mainnet, testnet},
     api::API,
     client::Client,
-    errors::Result,
+    error::Result,
     types::{
         request::exchange::{
             Action, Agent, CancelRequest, Grouping, OrderRequest, Request, TransferRequest,

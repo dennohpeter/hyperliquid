@@ -238,15 +238,15 @@ pub mod response {
         #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Ctx {
-            pub day_ntl_vlm: String,
             pub funding: String,
-            pub impact_pxs: Vec<String>,
+            pub open_interest: String,
+            pub prev_day_px: String,
+            pub day_ntl_vlm: String,
+            pub premium: String,
+            pub oracle_px: String,
             pub mark_px: String,
             pub mid_px: String,
-            pub open_interest: String,
-            pub oracle_px: String,
-            pub premium: String,
-            pub prev_day_px: String,
+            pub impact_pxs: Vec<String>,
         }
 
         #[derive(Deserialize, Debug)]
@@ -303,6 +303,7 @@ pub mod response {
             pub margin_summary: MarginSummary,
             pub cross_margin_summary: MarginSummary,
             pub withdrawable: String,
+            pub cross_maintenance_margin_used: String,
         }
 
         #[derive(Deserialize, Debug)]
@@ -450,10 +451,13 @@ pub mod response {
 pub mod ws {
     use std::collections::HashMap;
 
-    use ethers::types::Address;
+    use ethers::types::{Address, TxHash};
     use serde::{Deserialize, Serialize};
+    use serde_json::Value;
 
-    #[derive(Serialize, Debug)]
+    use crate::response::info::{Ctx, Universe, UserState};
+
+    #[derive(Serialize, Debug, Clone)]
     #[serde(rename_all = "camelCase", tag = "type")]
     pub enum Subscription {
         AllMids,
@@ -490,12 +494,40 @@ pub mod ws {
     }
 
     #[derive(Deserialize, Debug)]
+    pub struct LedgerUpdate {
+        pub hash: TxHash,
+        pub delta: Value,
+        pub time: u128,
+    }
+
+    #[derive(Deserialize, Debug)]
+    #[serde(rename_all = "camelCase")]
+    pub struct WebData {
+        pub user_state: UserState,
+        pub lending_vaults: Option<Vec<Value>>,
+        pub total_vault_equity: String,
+        pub open_orders: Vec<Value>,
+        pub fills: Vec<Value>,
+        pub whitelisted: bool,
+        pub ledger_updates: Vec<LedgerUpdate>,
+        pub agent_address: Address,
+        pub pending_withdraws: Option<Vec<Value>>,
+        pub cum_ledger: String,
+        pub meta: Universe,
+        pub asset_contexts: Option<Vec<Ctx>>,
+        pub order_history: Vec<Value>,
+        pub server_time: u128,
+        pub is_vault: bool,
+        pub user: Address,
+    }
+
+    #[derive(Deserialize, Debug)]
     pub struct WsTrade {
         pub coin: String,
         pub side: String,
         pub px: String,
         pub sz: String,
-        pub hash: String,
+        pub hash: TxHash,
         pub time: u128,
     }
 
@@ -518,8 +550,11 @@ pub mod ws {
     pub enum Event {
         AllMids(AllMids),
         Notification(Notification),
-        WebData(String),
-        WsTrade(Vec<WsTrade>),
-        WsBook(WsBook),
+        WebData(WebData),
+        Candle(Vec<WsTrade>),
+        L2Book(WsBook),
+        Trades(Vec<WsTrade>),
+        OrderUpdates(Value),
+        SubscriptionResponse(Value),
     }
 }
