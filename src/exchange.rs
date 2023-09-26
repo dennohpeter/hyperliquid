@@ -298,7 +298,7 @@ impl Exchange {
                 asset,
                 is_buy: _,
                 ntli,
-            } => (*asset, true, ntli.clone(), vault_address, nonce).encode(),
+            } => (*asset, true, *ntli, vault_address, nonce).encode(),
             Action::ApproveAgent {
                 chain: _,
                 agent: _,

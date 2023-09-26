@@ -21,7 +21,7 @@ pub fn parse_price(px: f64) -> String {
     if px.starts_with("0.") {
         px
     } else {
-        let px: Vec<&str> = px.split(".").collect();
+        let px: Vec<&str> = px.split('.').collect();
         let whole = px[0];
         let decimals = px[1];
 
