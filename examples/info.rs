@@ -1,22 +1,15 @@
-use std::sync::Arc;
-
-use ethers::{signers::LocalWallet, types::Address};
-use hyperliquid::{Chain, Hyperliquid, Info};
+use ethers::types::Address;
+use hyperliquid::{types::exchange::request::Chain, Hyperliquid, Info};
 
 const SEP: &str = "\n---";
 
 #[tokio::main]
 async fn main() {
-    // Key was randomly generated for testing and shouldn't be used with any real funds
-    let wallet: LocalWallet = "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
-        .parse()
-        .unwrap();
-
     let user: Address = "0xc64cc00b46101bd40aa1c3121195e85c0b0918d8"
         .parse()
         .expect("Invalid address");
 
-    let info = Hyperliquid::new(Arc::new(wallet), Chain::Dev);
+    let info = Hyperliquid::new(Chain::Dev);
 
     println!("Info API Examples");
 

@@ -2,19 +2,21 @@ use std::sync::Arc;
 
 use ethers::signers::LocalWallet;
 use hyperliquid::{
-    parse_price, parse_size,
-    request::exchange::{Limit, OrderRequest, OrderType, Tif},
-    Chain, Exchange, Hyperliquid,
+    types::exchange::request::{Chain, Limit, OrderRequest, OrderType, Tif},
+    utils::{parse_price, parse_size},
+    Exchange, Hyperliquid,
 };
 
 #[tokio::main]
 async fn main() {
     // Key was randomly generated for testing and shouldn't be used with any real funds
-    let wallet: LocalWallet = "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
-        .parse()
-        .unwrap();
+    let wallet: Arc<LocalWallet> = Arc::new(
+        "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
+            .parse()
+            .unwrap(),
+    );
 
-    let exchange: Exchange = Hyperliquid::new(Arc::new(wallet), Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
 
     let asset = 4;
     let sz_decimals = 4;
@@ -34,7 +36,7 @@ async fn main() {
 
     println!("Placing order...");
     let response = exchange
-        .place_order(order, vault_address)
+        .place_order(wallet.clone(), order, vault_address)
         .await
         .expect("Failed to place order");
 

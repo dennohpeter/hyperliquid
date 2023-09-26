@@ -1,0 +1,36 @@
+use hyperliquid::{
+    types::{
+        exchange::request::Chain,
+        websocket::{
+            request::{Channel, Subscription},
+            response::Response,
+        },
+    },
+    Hyperliquid, Result, Websocket,
+};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut ws: Websocket = Hyperliquid::new(Chain::Dev);
+
+    ws.connect().await?;
+
+    let subscription = Channel {
+        id: 1,
+        sub: Subscription::AllMids,
+    };
+
+    ws.subscribe(&[subscription]).await?;
+
+    let handler = |event: Response| {
+        println!("Received All Mids: \n--\n{:?}", event);
+
+        Ok(())
+    };
+
+    ws.next(handler).await?;
+
+    ws.disconnect().await?;
+
+    Ok(())
+}

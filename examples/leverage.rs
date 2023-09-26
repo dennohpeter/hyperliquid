@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use ethers::signers::{LocalWallet, Signer};
-use hyperliquid::{Chain, Exchange, Hyperliquid, Info};
+use hyperliquid::{types::exchange::request::Chain, Exchange, Hyperliquid, Info};
 
 #[tokio::main]
 async fn main() {
@@ -12,7 +12,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let exchange: Exchange = Hyperliquid::new(wallet.clone(), Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
 
     let leverage = 5;
     let asset = 4;
@@ -21,7 +21,7 @@ async fn main() {
     println!("Updating leverage to {} ...", leverage);
 
     let res = exchange
-        .update_leverage(leverage, asset, is_cross)
+        .update_leverage(wallet.clone(), leverage, asset, is_cross)
         .await
         .unwrap();
 
@@ -31,13 +31,13 @@ async fn main() {
 
     let margin = 1;
     let res = exchange
-        .update_isolated_margin(margin, asset)
+        .update_isolated_margin(wallet.clone(), margin, asset)
         .await
         .unwrap();
 
     println!("Response: {:?}", res);
 
-    let info: Info = Hyperliquid::new(wallet.clone(), Chain::Dev);
+    let info: Info = Hyperliquid::new(Chain::Dev);
 
     // user state
     let res = info.user_state(wallet.address()).await.unwrap();

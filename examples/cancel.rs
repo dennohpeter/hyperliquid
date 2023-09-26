@@ -2,9 +2,11 @@ use std::sync::Arc;
 
 use ethers::signers::LocalWallet;
 use hyperliquid::{
-    request::exchange::{CancelRequest, Limit, OrderRequest, OrderType, Tif},
-    response::exchange::{Response, Status},
-    Chain, Exchange, Hyperliquid,
+    types::exchange::{
+        request::{CancelRequest, Chain, Limit, OrderRequest, OrderType, Tif},
+        response::{Response, Status},
+    },
+    Exchange, Hyperliquid,
 };
 
 #[tokio::main]
@@ -16,7 +18,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let exchange: Exchange = Hyperliquid::new(wallet.clone(), Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
 
     let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
 
@@ -33,7 +35,7 @@ async fn main() {
 
     println!("Placing order...");
     let response = exchange
-        .place_order(order, vault_address)
+        .place_order(wallet.clone(), order, vault_address)
         .await
         .expect("Failed to place order");
 
@@ -61,7 +63,7 @@ async fn main() {
     let vault_address = None;
 
     let response = exchange
-        .cancel_order(cancel, vault_address)
+        .cancel_order(wallet.clone(), cancel, vault_address)
         .await
         .expect("Failed to cancel order");
 
