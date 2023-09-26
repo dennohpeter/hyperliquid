@@ -1,15 +1,13 @@
-use std::{collections::HashMap, sync::Arc};
-
-use ethers::signers::LocalWallet;
+use std::collections::HashMap;
 
 use crate::{
-    client::Client, config::Config, exchange::Exchange, info::Info, types::Chain, Websocket,
+    client::Client,
+    config::Config,
+    exchange::Exchange,
+    info::Info,
+    types::{exchange::request::Chain, API},
+    Websocket,
 };
-
-pub enum API {
-    Info,
-    Exchange,
-}
 
 impl From<&API> for String {
     fn from(api: &API) -> Self {
@@ -21,17 +19,16 @@ impl From<&API> for String {
 }
 
 pub trait Hyperliquid {
-    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self;
-    fn new_with_config(wallet: Arc<LocalWallet>, chain: Chain, config: &Config) -> Self;
+    fn new(chain: Chain) -> Self;
+    fn new_with_config(chain: Chain, config: &Config) -> Self;
 }
 
 impl Hyperliquid for Info {
-    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self {
-        Self::new_with_config(wallet, chain, &Config::default())
+    fn new(chain: Chain) -> Self {
+        Self::new_with_config(chain, &Config::default())
     }
-    fn new_with_config(wallet: Arc<LocalWallet>, chain: Chain, config: &Config) -> Self {
+    fn new_with_config(chain: Chain, config: &Config) -> Self {
         Self {
-            wallet,
             chain,
             client: Client::new(config.rest_endpoint.clone()),
         }
@@ -39,12 +36,11 @@ impl Hyperliquid for Info {
 }
 
 impl Hyperliquid for Exchange {
-    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self {
-        Self::new_with_config(wallet, chain, &Config::default())
+    fn new(chain: Chain) -> Self {
+        Self::new_with_config(chain, &Config::default())
     }
-    fn new_with_config(wallet: Arc<LocalWallet>, chain: Chain, config: &Config) -> Self {
+    fn new_with_config(chain: Chain, config: &Config) -> Self {
         Self {
-            wallet,
             chain,
             client: Client::new(config.rest_endpoint.clone()),
         }
@@ -52,12 +48,11 @@ impl Hyperliquid for Exchange {
 }
 
 impl Hyperliquid for Websocket {
-    fn new(wallet: Arc<LocalWallet>, chain: Chain) -> Self {
-        Self::new_with_config(wallet, chain, &Config::default())
+    fn new(chain: Chain) -> Self {
+        Self::new_with_config(chain, &Config::default())
     }
-    fn new_with_config(wallet: Arc<LocalWallet>, _chain: Chain, config: &Config) -> Self {
+    fn new_with_config(_chain: Chain, config: &Config) -> Self {
         Self {
-            wallet,
             url: config.ws_endpoint.clone(),
             stream: None,
             channels: HashMap::new(),

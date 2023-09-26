@@ -4,20 +4,19 @@ use ethers::{
     abi::AbiEncode,
     signers::{LocalWallet, Signer},
     types::{Address, Signature, H256},
-    utils::keccak256,
+    utils::{keccak256, to_checksum},
 };
 
 use crate::{
-    agent::{l1, mainnet, testnet},
-    api::API,
     client::Client,
     error::Result,
     types::{
-        request::exchange::{
-            Action, Agent, CancelRequest, Grouping, OrderRequest, Request, TransferRequest,
+        agent::{l1, mainnet, testnet},
+        exchange::request::{
+            Action, Agent, CancelRequest, Chain, Grouping, OrderRequest, Request, TransferRequest,
         },
-        response::exchange::Response,
-        Chain,
+        exchange::response::Response,
+        usd_transfer, API,
     },
     utils::float_to_int_for_hashing,
 };
@@ -25,7 +24,6 @@ use crate::{
 /// Endpoint to interact with and trade on the Hyperliquid chain.
 pub struct Exchange {
     pub client: Client,
-    pub wallet: Arc<LocalWallet>,
     pub chain: Chain,
 }
 
@@ -33,6 +31,7 @@ impl Exchange {
     /// Place an order
     pub async fn place_order(
         &self,
+        wallet: Arc<LocalWallet>,
         order: OrderRequest,
         vault_address: Option<Address>,
     ) -> Result<Response> {
@@ -46,7 +45,7 @@ impl Exchange {
         let connection_id =
             self.connection_id(&action, vault_address.unwrap_or_default(), nonce)?;
 
-        let signature = self.sign(connection_id).await?;
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -61,6 +60,7 @@ impl Exchange {
     /// Cancel an order
     pub async fn cancel_order(
         &self,
+        wallet: Arc<LocalWallet>,
         cancel: CancelRequest,
         vault_address: Option<Address>,
     ) -> Result<Response> {
@@ -73,7 +73,7 @@ impl Exchange {
         let connection_id =
             self.connection_id(&action, vault_address.unwrap_or_default(), nonce)?;
 
-        let signature = self.sign(connection_id).await?;
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -86,12 +86,41 @@ impl Exchange {
     }
 
     /// L1 USDC transfer
-    pub async fn usdc_transfer(&self, destination: Address, amount: String) -> Result<Response> {
+    pub async fn usdc_transfer(
+        &self,
+        from: Arc<LocalWallet>,
+        destination: Address,
+        amount: String,
+    ) -> Result<Response> {
         let nonce = self.timestamp()?;
+
+        let signature = {
+            let destination = to_checksum(&destination, None);
+
+            match self.chain {
+                Chain::Arbitrum => {
+                    from.sign_typed_data(&usd_transfer::mainnet::UsdTransferSignPayload {
+                        destination,
+                        amount: amount.clone(),
+                        time: nonce as u64,
+                    })
+                    .await?
+                }
+                Chain::ArbitrumGoerli => {
+                    from.sign_typed_data(&usd_transfer::testnet::UsdTransferSignPayload {
+                        destination,
+                        amount: amount.clone(),
+                        time: nonce as u64,
+                    })
+                    .await?
+                }
+                Chain::Dev => todo!("Dev chain not supported"),
+            }
+        };
 
         let payload = TransferRequest {
             amount,
-            destination,
+            destination: to_checksum(&destination, None),
             time: nonce,
         };
 
@@ -99,10 +128,6 @@ impl Exchange {
             chain: self.chain,
             payload,
         };
-
-        let connection_id = self.connection_id(&action, Address::zero(), nonce)?;
-
-        let signature = self.sign(connection_id).await?;
 
         let request = Request {
             action,
@@ -115,14 +140,14 @@ impl Exchange {
     }
 
     /// Initiate a withdrawal request
-    pub async fn withdraw(&self, usd: String) -> Result<Response> {
+    pub async fn withdraw(&self, from: Arc<LocalWallet>, usd: String) -> Result<Response> {
         let nonce = self.timestamp()?;
 
         let action = Action::Withdraw { usd, nonce };
 
         let connection_id = self.connection_id(&action, Address::zero(), nonce)?;
 
-        let signature = self.sign(connection_id).await?;
+        let signature = self.sign(from, connection_id).await?;
 
         let request = Request {
             action,
@@ -137,6 +162,7 @@ impl Exchange {
     /// Update leverage for a given asset
     pub async fn update_leverage(
         &self,
+        wallet: Arc<LocalWallet>,
         leverage: u32,
         asset: u32,
         is_cross: bool,
@@ -151,7 +177,7 @@ impl Exchange {
 
         let connection_id = self.connection_id(&action, Address::zero(), nonce)?;
 
-        let signature = self.sign(connection_id).await?;
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -164,7 +190,12 @@ impl Exchange {
     }
 
     /// Update isolated margin for a given asset
-    pub async fn update_isolated_margin(&self, margin: i64, asset: u32) -> Result<Response> {
+    pub async fn update_isolated_margin(
+        &self,
+        wallet: Arc<LocalWallet>,
+        margin: i64,
+        asset: u32,
+    ) -> Result<Response> {
         let nonce = self.timestamp()?;
 
         let action = Action::UpdateIsolatedMargin {
@@ -175,7 +206,7 @@ impl Exchange {
 
         let connection_id = self.connection_id(&action, Address::zero(), nonce)?;
 
-        let signature = self.sign(connection_id).await?;
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -188,7 +219,11 @@ impl Exchange {
     }
 
     /// Approve an agent to trade on behalf of the user
-    pub async fn approve_agent(&self, agent_address: Address) -> Result<Response> {
+    pub async fn approve_agent(
+        &self,
+        wallet: Arc<LocalWallet>,
+        agent_address: Address,
+    ) -> Result<Response> {
         let nonce = self.timestamp()?;
 
         let connection_id = keccak256(agent_address.encode()).into();
@@ -205,7 +240,7 @@ impl Exchange {
             agent_address,
         };
 
-        let signature = self.sign(connection_id).await?;
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -275,21 +310,21 @@ impl Exchange {
     }
 
     /// Create a signature for the given connection id
-    async fn sign(&self, connection_id: H256) -> Result<Signature> {
+    async fn sign(&self, wallet: Arc<LocalWallet>, connection_id: H256) -> Result<Signature> {
         Ok(match self.chain {
             Chain::Arbitrum => {
                 let payload = mainnet::Agent {
                     source: "b".to_string(),
                     connection_id,
                 };
-                self.wallet.sign_typed_data(&payload).await?
+                wallet.sign_typed_data(&payload).await?
             }
             Chain::ArbitrumGoerli => {
                 let payload = testnet::Agent {
                     source: "b".to_string(),
                     connection_id,
                 };
-                self.wallet.sign_typed_data(&payload).await?
+                wallet.sign_typed_data(&payload).await?
             }
             Chain::Dev => {
                 let payload = l1::Agent {
@@ -297,7 +332,7 @@ impl Exchange {
                     connection_id,
                 };
 
-                self.wallet.sign_typed_data(&payload).await?
+                wallet.sign_typed_data(&payload).await?
             }
         })
     }

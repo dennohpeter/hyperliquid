@@ -4,7 +4,7 @@
 
 - [x] Exchange
 
-- [ ] Websocket
+- [x] Websocket
 
 ## Usage
 
@@ -17,5 +17,5 @@ cargo run --release --example exchange
 ```
 
 ```bash
-cargo run --release --example websocket
+cargo run --release --example ws_all_mids
 ```

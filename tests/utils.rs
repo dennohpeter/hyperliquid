@@ -1,4 +1,4 @@
-use hyperliquid::{parse_price, parse_size};
+use hyperliquid::utils::{parse_price, parse_size};
 
 #[test]
 fn test_parse_price() {

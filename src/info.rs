@@ -1,25 +1,26 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
-use ethers::{signers::LocalWallet, types::Address};
+use ethers::types::Address;
 
 use crate::{
-    api::API,
     client::Client,
     error::Result,
     types::{
-        request::info::{CandleSnapshotRequest, Request},
-        response::info::{
-            AssetContext, CandleSnapshot, FundingHistory, L2Book, OpenOrder, Universe, UserFill,
-            UserFunding, UserState,
+        exchange::request::Chain,
+        info::{
+            request::{CandleSnapshotRequest, Request},
+            response::{
+                AssetContext, CandleSnapshot, FundingHistory, L2Book, OpenOrder, Universe,
+                UserFill, UserFunding, UserState,
+            },
         },
-        Chain,
+        API,
     },
 };
 
 /// Endpoint to fetch information about the exchange and specific users.
 pub struct Info {
     pub client: Client,
-    pub wallet: Arc<LocalWallet>,
     pub chain: Chain,
 }
 

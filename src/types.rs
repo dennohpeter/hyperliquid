@@ -1,16 +1,107 @@
-use serde::Serialize;
-
-#[derive(Clone, Copy, Serialize, Debug)]
-#[serde(rename_all = "PascalCase")]
-pub enum Chain {
-    Dev,
-    Arbitrum,
-    ArbitrumGoerli,
+pub enum API {
+    Info,
+    Exchange,
 }
 
-pub mod request {
+pub mod agent {
+    pub mod mainnet {
+        use ethers::{
+            contract::{Eip712, EthAbiType},
+            types::H256,
+        };
+        use serde::{Deserialize, Serialize};
 
-    pub mod info {
+        #[derive(Eip712, Clone, EthAbiType, Serialize, Deserialize)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 42161,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        #[serde(rename_all = "camelCase")]
+        pub struct Agent {
+            pub source: String,
+            pub connection_id: H256,
+        }
+    }
+
+    pub mod testnet {
+        use ethers::{
+            contract::{Eip712, EthAbiType},
+            types::H256,
+        };
+
+        #[derive(Eip712, Clone, EthAbiType)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 421613,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        pub struct Agent {
+            pub source: String,
+            pub connection_id: H256,
+        }
+    }
+
+    pub mod l1 {
+        use ethers::{
+            contract::{Eip712, EthAbiType},
+            types::H256,
+        };
+
+        #[derive(Eip712, Clone, EthAbiType)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 1337,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        pub struct Agent {
+            pub source: String,
+            pub connection_id: H256,
+        }
+    }
+}
+
+pub mod usd_transfer {
+    pub mod mainnet {
+        use ethers::contract::{Eip712, EthAbiType};
+
+        #[derive(Eip712, Clone, EthAbiType)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 42161,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        pub struct UsdTransferSignPayload {
+            pub destination: String,
+            pub amount: String,
+            pub time: u64,
+        }
+    }
+
+    pub mod testnet {
+        use ethers::contract::{Eip712, EthAbiType};
+
+        #[derive(Eip712, Clone, EthAbiType)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 421613,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        pub struct UsdTransferSignPayload {
+            pub destination: String,
+            pub amount: String,
+            pub time: u64,
+        }
+    }
+}
+
+pub mod info {
+    pub mod request {
         use ethers::types::Address;
         use serde::Serialize;
 
@@ -62,164 +153,8 @@ pub mod request {
             },
         }
     }
-    pub mod exchange {
-        use ethers::types::{Address, Signature, H256};
-        use serde::Serialize;
 
-        use crate::types::Chain;
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "PascalCase")]
-        pub enum Tif {
-            Gtc,
-            Ioc,
-            Alo,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct Limit {
-            pub tif: Tif,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "lowercase")]
-        pub enum TpSl {
-            Tp,
-            Sl,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct Trigger {
-            pub trigger_px: String,
-            pub is_market: bool,
-            pub tpsl: TpSl,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub enum OrderType {
-            Limit(Limit),
-            Trigger(Trigger),
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct OrderRequest {
-            pub asset: u32,
-            pub is_buy: bool,
-            pub limit_px: String,
-            pub sz: String,
-            pub reduce_only: bool,
-            pub order_type: OrderType,
-        }
-
-        impl OrderRequest {
-            pub fn get_type(&self) -> (u8, u64) {
-                match &self.order_type {
-                    OrderType::Limit(l) => match l.tif {
-                        Tif::Alo => (1, 0),
-                        Tif::Gtc => (2, 0),
-                        Tif::Ioc => (3, 0),
-                    },
-                    OrderType::Trigger(t) => match (t.is_market, &t.tpsl) {
-                        (true, TpSl::Tp) => (4, t.trigger_px.parse().unwrap()),
-                        (false, TpSl::Tp) => (5, t.trigger_px.parse().unwrap()),
-                        (true, TpSl::Sl) => (6, t.trigger_px.parse().unwrap()),
-                        (false, TpSl::Sl) => (7, t.trigger_px.parse().unwrap()),
-                    },
-                }
-            }
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub enum Grouping {
-            Na = 0,
-        }
-        impl Grouping {
-            pub fn to_i32(&self) -> i32 {
-                match self {
-                    Grouping::Na => 0,
-                }
-            }
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct CancelRequest {
-            pub oid: u64,
-            pub asset: u32,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct TransferRequest {
-            pub destination: Address,
-            pub amount: String,
-            pub time: u128,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct Agent {
-            pub source: String,
-            pub connection_id: H256,
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase", tag = "type")]
-        pub enum Action {
-            Order {
-                grouping: Grouping,
-                orders: Vec<OrderRequest>,
-            },
-            Cancel {
-                cancels: Vec<CancelRequest>,
-            },
-            UsdTransfer {
-                chain: Chain,
-                payload: TransferRequest,
-            },
-            Withdraw {
-                usd: String,
-                nonce: u128,
-            },
-            #[serde(rename_all = "camelCase")]
-            UpdateLeverage {
-                asset: u32,
-                leverage: u32,
-                is_cross: bool,
-            },
-            #[serde(rename_all = "camelCase")]
-            UpdateIsolatedMargin {
-                asset: u32,
-                is_buy: bool,
-                ntli: i64,
-            },
-            #[serde(rename_all = "camelCase", rename = "connect")]
-            ApproveAgent {
-                chain: Chain,
-                agent: Agent,
-                agent_address: Address,
-            },
-        }
-
-        #[derive(Serialize, Debug)]
-        #[serde(rename_all = "camelCase")]
-        pub struct Request {
-            pub action: Action,
-            pub nonce: u128,
-            pub signature: Signature,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            pub vault_address: Option<Address>,
-        }
-    }
-}
-
-pub mod response {
-    pub mod info {
+    pub mod response {
         use serde::Deserialize;
 
         #[derive(Deserialize, Debug)]
@@ -327,17 +262,18 @@ pub mod response {
         #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct UserFill {
-            pub closed_pnl: String,
             pub coin: String,
-            pub crossed: bool,
+            pub px: String,
+            pub sz: String,
+            pub side: Side,
+            pub time: u64,
+            pub start_position: String,
             pub dir: String,
+            pub closed_pnl: String,
             pub hash: String,
             pub oid: u64,
-            pub px: String,
-            pub side: Side,
-            pub start_position: String,
-            pub sz: String,
-            pub time: u64,
+            pub crossed: bool,
+            pub fee: String,
         }
 
         #[derive(Deserialize, Debug)]
@@ -399,8 +335,171 @@ pub mod response {
             pub v: String,
         }
     }
+}
 
-    pub mod exchange {
+pub mod exchange {
+    pub mod request {
+        use ethers::types::{Address, Signature, H256};
+        use serde::Serialize;
+
+        #[derive(Clone, Copy, Serialize, Debug)]
+        #[serde(rename_all = "PascalCase")]
+        pub enum Chain {
+            Dev,
+            Arbitrum,
+            ArbitrumGoerli,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "PascalCase")]
+        pub enum Tif {
+            Gtc,
+            Ioc,
+            Alo,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Limit {
+            pub tif: Tif,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "lowercase")]
+        pub enum TpSl {
+            Tp,
+            Sl,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Trigger {
+            pub trigger_px: String,
+            pub is_market: bool,
+            pub tpsl: TpSl,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub enum OrderType {
+            Limit(Limit),
+            Trigger(Trigger),
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct OrderRequest {
+            pub asset: u32,
+            pub is_buy: bool,
+            pub limit_px: String,
+            pub sz: String,
+            pub reduce_only: bool,
+            pub order_type: OrderType,
+        }
+
+        impl OrderRequest {
+            pub fn get_type(&self) -> (u8, u64) {
+                match &self.order_type {
+                    OrderType::Limit(l) => match l.tif {
+                        Tif::Alo => (1, 0),
+                        Tif::Gtc => (2, 0),
+                        Tif::Ioc => (3, 0),
+                    },
+                    OrderType::Trigger(t) => match (t.is_market, &t.tpsl) {
+                        (true, TpSl::Tp) => (4, t.trigger_px.parse().unwrap()),
+                        (false, TpSl::Tp) => (5, t.trigger_px.parse().unwrap()),
+                        (true, TpSl::Sl) => (6, t.trigger_px.parse().unwrap()),
+                        (false, TpSl::Sl) => (7, t.trigger_px.parse().unwrap()),
+                    },
+                }
+            }
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub enum Grouping {
+            Na = 0,
+        }
+        impl Grouping {
+            pub fn to_i32(&self) -> i32 {
+                match self {
+                    Grouping::Na => 0,
+                }
+            }
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct CancelRequest {
+            pub oid: u64,
+            pub asset: u32,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct TransferRequest {
+            pub destination: String,
+            pub amount: String,
+            pub time: u128,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Agent {
+            pub source: String,
+            pub connection_id: H256,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase", tag = "type")]
+        pub enum Action {
+            Order {
+                grouping: Grouping,
+                orders: Vec<OrderRequest>,
+            },
+            Cancel {
+                cancels: Vec<CancelRequest>,
+            },
+            UsdTransfer {
+                chain: Chain,
+                payload: TransferRequest,
+            },
+            Withdraw {
+                usd: String,
+                nonce: u128,
+            },
+            #[serde(rename_all = "camelCase")]
+            UpdateLeverage {
+                asset: u32,
+                leverage: u32,
+                is_cross: bool,
+            },
+            #[serde(rename_all = "camelCase")]
+            UpdateIsolatedMargin {
+                asset: u32,
+                is_buy: bool,
+                ntli: i64,
+            },
+            #[serde(rename_all = "camelCase", rename = "connect")]
+            ApproveAgent {
+                chain: Chain,
+                agent: Agent,
+                agent_address: Address,
+            },
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Request {
+            pub action: Action,
+            pub nonce: u128,
+            pub signature: Signature,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub vault_address: Option<Address>,
+        }
+    }
+
+    pub mod response {
         use serde::Deserialize;
 
         #[derive(Deserialize, Debug)]
@@ -448,113 +547,190 @@ pub mod response {
     }
 }
 
-pub mod ws {
-    use std::collections::HashMap;
+pub mod websocket {
+    pub mod request {
+        use ethers::types::Address;
+        use serde::Serialize;
 
-    use ethers::types::{Address, TxHash};
-    use serde::{Deserialize, Serialize};
-    use serde_json::Value;
+        #[derive(Serialize, Debug, Clone)]
+        #[serde(rename_all = "camelCase", tag = "type")]
+        pub enum Subscription {
+            AllMids,
+            Notification { user: Address },
+            OrderUpdates { user: Address },
+            User { user: Address },
+            WebData { user: Address },
+            L2Book { coin: String },
+            Trades { coin: String },
+            Candle { coin: String, interval: String },
+        }
 
-    use crate::response::info::{Ctx, Universe, UserState};
+        #[derive(Clone)]
+        pub struct Channel {
+            pub id: u64,
+            pub sub: Subscription,
+        }
 
-    #[derive(Serialize, Debug, Clone)]
-    #[serde(rename_all = "camelCase", tag = "type")]
-    pub enum Subscription {
-        AllMids,
-        Notification { user: Address },
-        WebData { user: Address },
-        Candle { coin: String, interval: String },
-        L2Book { coin: String },
-        Trades { coin: String },
-        OrderUpdates { user: Address },
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "lowercase")]
+        pub enum Method {
+            Subscribe,
+            Unsubscribe,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Request {
+            pub method: Method,
+            pub subscription: Subscription,
+        }
     }
 
-    #[derive(Serialize, Debug)]
-    #[serde(rename_all = "lowercase")]
-    pub enum Method {
-        Subscribe,
-        Unsubscribe,
-    }
+    pub mod response {
+        use std::collections::HashMap;
 
-    #[derive(Serialize, Debug)]
-    #[serde(rename_all = "camelCase")]
-    pub struct Request {
-        pub subscription: Subscription,
-        pub method: Method,
-    }
+        use ethers::types::{Address, TxHash};
+        use serde::Deserialize;
+        use serde_json::Value;
 
-    #[derive(Deserialize, Debug)]
-    pub struct AllMids {
-        pub mids: HashMap<String, String>,
-    }
+        use crate::types::info::response::{CandleSnapshot, Ctx, Universe, UserFill, UserState};
 
-    #[derive(Deserialize, Debug)]
-    pub struct Notification {
-        pub notification: String,
-    }
+        #[derive(Deserialize, Debug)]
+        pub struct AllMids {
+            pub mids: HashMap<String, String>,
+        }
 
-    #[derive(Deserialize, Debug)]
-    pub struct LedgerUpdate {
-        pub hash: TxHash,
-        pub delta: Value,
-        pub time: u128,
-    }
+        #[derive(Deserialize, Debug)]
+        pub struct Notification {
+            pub notification: String,
+        }
 
-    #[derive(Deserialize, Debug)]
-    #[serde(rename_all = "camelCase")]
-    pub struct WebData {
-        pub user_state: UserState,
-        pub lending_vaults: Option<Vec<Value>>,
-        pub total_vault_equity: String,
-        pub open_orders: Vec<Value>,
-        pub fills: Vec<Value>,
-        pub whitelisted: bool,
-        pub ledger_updates: Vec<LedgerUpdate>,
-        pub agent_address: Address,
-        pub pending_withdraws: Option<Vec<Value>>,
-        pub cum_ledger: String,
-        pub meta: Universe,
-        pub asset_contexts: Option<Vec<Ctx>>,
-        pub order_history: Vec<Value>,
-        pub server_time: u128,
-        pub is_vault: bool,
-        pub user: Address,
-    }
+        #[derive(Deserialize, Debug)]
+        pub struct LedgerUpdate {
+            pub hash: TxHash,
+            pub delta: Value,
+            pub time: u128,
+        }
 
-    #[derive(Deserialize, Debug)]
-    pub struct WsTrade {
-        pub coin: String,
-        pub side: String,
-        pub px: String,
-        pub sz: String,
-        pub hash: TxHash,
-        pub time: u128,
-    }
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct WebData {
+            pub user_state: UserState,
+            pub lending_vaults: Option<Vec<Value>>,
+            pub total_vault_equity: String,
+            pub open_orders: Vec<Value>,
+            pub fills: Vec<Value>,
+            pub whitelisted: bool,
+            pub ledger_updates: Vec<LedgerUpdate>,
+            pub agent_address: Address,
+            pub pending_withdraws: Option<Vec<Value>>,
+            pub cum_ledger: String,
+            pub meta: Universe,
+            pub asset_contexts: Option<Vec<Ctx>>,
+            pub order_history: Vec<Value>,
+            pub server_time: u128,
+            pub is_vault: bool,
+            pub user: Address,
+        }
 
-    #[derive(Deserialize, Debug)]
-    pub struct WsLevel {
-        pub px: String,
-        pub sz: String,
-        pub n: u64,
-    }
+        #[derive(Deserialize, Debug)]
+        pub struct WsTrade {
+            pub coin: String,
+            pub side: String,
+            pub px: String,
+            pub sz: String,
+            pub hash: TxHash,
+            pub time: u128,
+        }
 
-    #[derive(Deserialize, Debug)]
-    pub struct WsBook {
-        pub coin: String,
-        pub levels: Vec<Vec<WsLevel>>,
-        pub time: u128,
-    }
+        #[derive(Deserialize, Debug)]
+        pub struct WsLevel {
+            pub px: String,
+            pub sz: String,
+            pub n: u64,
+        }
 
-    #[derive(Deserialize, Debug)]
-    #[serde(rename_all = "camelCase", tag = "channel", content = "data")]
-    pub enum Event {
-        AllMids(AllMids),
-        Notification(Notification),
-        WebData(WebData),
-        Candle(Vec<WsTrade>),
-        L2Book(WsBook),
-        Trades(Vec<WsTrade>),
-        OrderUpdates(Value),
-        SubscriptionResponse(Value),
+        #[derive(Deserialize, Debug)]
+        pub struct WsBook {
+            pub coin: String,
+            pub levels: Vec<Vec<WsLevel>>,
+            pub time: u128,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct WsBasicOrder {
+            pub coin: String,
+            pub side: String,
+            pub limit_px: String,
+            pub sz: String,
+            pub oid: u64,
+            pub timestamp: u128,
+            pub orig_sz: String,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct WsOrder {
+            pub order: WsBasicOrder,
+            pub status: String,
+            pub status_timestamp: u128,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct WsUserFunding {
+            pub time: u128,
+            pub coin: String,
+            pub usdc: String,
+            pub szi: String,
+            pub funding_rate: String,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "snake_case")]
+        pub struct WsLiquidation {
+            pub liq: u64,
+            pub liquidator: String,
+            pub liquidated_user: String,
+            pub liquidated_ntl_pos: String,
+            pub liquidated_account_value: String,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct WsNonUserCancel {
+            pub oid: u64,
+            pub coin: String,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase", untagged)]
+        pub enum WsUserEvent {
+            WsFill(Vec<UserFill>),
+            WsUserFunding(WsUserFunding),
+            WsLiquidation(WsLiquidation),
+            WsNonUserCancel(Vec<WsNonUserCancel>),
+        }
+
+        #[derive(Deserialize, Debug)]
+        pub struct Channel {
+            pub method: String,
+            pub subscription: Value,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase", tag = "channel", content = "data")]
+        pub enum Response {
+            AllMids(AllMids),
+            Notification(Notification),
+            WebData(WebData),
+            Candle(CandleSnapshot),
+            L2Book(WsBook),
+            Trades(Vec<WsTrade>),
+            OrderUpdates(WsOrder),
+            User(WsUserEvent),
+            SubscriptionResponse(Channel),
+        }
     }
 }

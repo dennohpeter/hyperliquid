@@ -4,7 +4,7 @@ use thiserror::Error as ThisError;
 use tokio_tungstenite::tungstenite;
 use tungstenite::Error as WsError;
 
-use crate::Subscription;
+use crate::types::websocket::request::Subscription;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -22,7 +22,7 @@ pub enum Error {
     NotConnected,
     #[error("JSON error: {0:?}")]
     Json(serde_json::Error),
-    #[error("Not subscribed to {0:?}")]
+    #[error("Not subscribed to channel with id {0}")]
     NotSubscribed(u64),
     #[error("Subscription failed: {0:?}")]
     SubscriptionFailed(Subscription),

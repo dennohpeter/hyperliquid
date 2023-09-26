@@ -7,7 +7,7 @@ pub fn float_to_int_for_hashing(num: f64) -> u64 {
 ///
 /// # Examples
 /// ```
-/// use hyperliquid::parse_price;
+/// use hyperliquid::utils::parse_price;
 ///
 /// assert_eq!(parse_price(1234.5), "1234.5");
 /// assert_eq!(parse_price(1234.56), "1234.5");
@@ -39,7 +39,7 @@ pub fn parse_price(px: f64) -> String {
 ///
 /// # Examples
 /// ```
-/// use hyperliquid::parse_size;
+/// use hyperliquid::utils::parse_size;
 ///
 /// assert_eq!(parse_size(1.001, 3), "1.001");
 /// assert_eq!(parse_size(1.001, 2), "1.00");
