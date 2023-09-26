@@ -16,13 +16,13 @@ A Rust library for Hyperliquid API
 ```toml
 [dependencies]
 
-hyperliquid = { version = "0.0.0" }
+hyperliquid = { version = "0.2.0" }
 ```
 
 ### Usage
 
 ```rust
-use hyperliquid::{Hyperliquid, Chain, Address, Info};
+use hyperliquid::{Hyperliquid, Chain, Info};
 
 #[tokio::main]
 async fn main() {
@@ -30,9 +30,8 @@ async fn main() {
         .parse()
         .expect("Invalid address");
 
-    let wallet = None;
 
-    let info:Info = Hyperliquid::new(wallet, Dev);
+    let info:Info = Hyperliquid::new(Chain::Dev);
 
     // Retrieve exchange metadata
     let metadata = info.metadata().await.unwrap();
