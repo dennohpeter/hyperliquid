@@ -311,24 +311,29 @@ impl Exchange {
 
     /// Create a signature for the given connection id
     async fn sign(&self, wallet: Arc<LocalWallet>, connection_id: H256) -> Result<Signature> {
-        Ok(match self.chain {
+        let (chain, source) = match self.chain {
+            Chain::Arbitrum => (Chain::Dev, "a".to_string()),
+            Chain::Dev | Chain::ArbitrumGoerli => (Chain::Dev, "b".to_string()),
+        };
+
+        Ok(match chain {
             Chain::Arbitrum => {
                 let payload = mainnet::Agent {
-                    source: "b".to_string(),
+                    source,
                     connection_id,
                 };
                 wallet.sign_typed_data(&payload).await?
             }
             Chain::ArbitrumGoerli => {
                 let payload = testnet::Agent {
-                    source: "b".to_string(),
+                    source,
                     connection_id,
                 };
                 wallet.sign_typed_data(&payload).await?
             }
             Chain::Dev => {
                 let payload = l1::Agent {
-                    source: "b".to_string(),
+                    source,
                     connection_id,
                 };
 

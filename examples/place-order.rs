@@ -16,7 +16,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Chain::Arbitrum);
 
     let asset = 4;
     let sz_decimals = 4;
