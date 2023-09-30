@@ -16,7 +16,7 @@ A Rust library for Hyperliquid API
 ```toml
 [dependencies]
 
-hyperliquid = { version = "0.2.0" }
+hyperliquid = { version = "0.2.1" }
 ```
 
 ### Usage
