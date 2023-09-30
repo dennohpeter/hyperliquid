@@ -25,7 +25,12 @@ pub trait Hyperliquid {
 
 impl Hyperliquid for Info {
     fn new(chain: Chain) -> Self {
-        Self::new_with_config(chain, &Config::default())
+        let config = match chain {
+            Chain::Arbitrum => Config::mainnet(),
+            Chain::ArbitrumGoerli => Config::testnet(),
+            Chain::Dev => Config::default(),
+        };
+        Self::new_with_config(chain, &config)
     }
     fn new_with_config(chain: Chain, config: &Config) -> Self {
         Self {
@@ -37,7 +42,12 @@ impl Hyperliquid for Info {
 
 impl Hyperliquid for Exchange {
     fn new(chain: Chain) -> Self {
-        Self::new_with_config(chain, &Config::default())
+        let config = match chain {
+            Chain::Arbitrum => Config::mainnet(),
+            Chain::ArbitrumGoerli => Config::testnet(),
+            Chain::Dev => Config::default(),
+        };
+        Self::new_with_config(chain, &config)
     }
     fn new_with_config(chain: Chain, config: &Config) -> Self {
         Self {
@@ -49,7 +59,12 @@ impl Hyperliquid for Exchange {
 
 impl Hyperliquid for Websocket {
     fn new(chain: Chain) -> Self {
-        Self::new_with_config(chain, &Config::default())
+        let config = match chain {
+            Chain::Arbitrum => Config::mainnet(),
+            Chain::ArbitrumGoerli => Config::testnet(),
+            Chain::Dev => Config::default(),
+        };
+        Self::new_with_config(chain, &config)
     }
     fn new_with_config(_chain: Chain, config: &Config) -> Self {
         Self {

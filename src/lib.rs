@@ -7,6 +7,7 @@ mod info;
 mod websocket;
 
 pub use api::Hyperliquid;
+pub use config::Config;
 pub use error::{Error, Result};
 pub use exchange::Exchange;
 pub use info::Info;

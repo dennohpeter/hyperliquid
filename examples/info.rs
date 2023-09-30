@@ -9,7 +9,7 @@ async fn main() {
         .parse()
         .expect("Invalid address");
 
-    let info = Hyperliquid::new(Chain::Dev);
+    let info = Hyperliquid::new(Chain::Arbitrum);
 
     println!("Info API Examples");
 

@@ -16,7 +16,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let exchange: Exchange = Hyperliquid::new(Chain::Arbitrum);
+    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
 
     let asset = 4;
     let sz_decimals = 4;
@@ -27,8 +27,8 @@ async fn main() {
         asset,
         is_buy: true,
         reduce_only: false,
-        limit_px: parse_price(1700.0),
-        sz: parse_size(0.01, sz_decimals),
+        limit_px: parse_price(1674.0),
+        sz: parse_size(0.1, sz_decimals),
         order_type,
     };
 
