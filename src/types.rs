@@ -162,6 +162,8 @@ pub mod info {
         pub struct Asset {
             pub name: String,
             pub sz_decimals: u32,
+            pub max_leverage: u32,
+            pub only_isolated: bool,
         }
 
         #[derive(Deserialize, Debug)]
