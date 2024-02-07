@@ -126,6 +126,10 @@ pub mod info {
             OpenOrders {
                 user: Address,
             },
+
+            FrontendOpenOrders {
+                user: Address,
+            },
             UserFills {
                 user: Address,
             },
@@ -209,7 +213,6 @@ pub mod info {
             pub leverage: Leverage,
             pub liquidation_px: Option<String>,
             pub margin_used: String,
-            pub max_trade_szs: Vec<String>,
             pub position_value: String,
             pub return_on_equity: String,
             pub szi: String,
@@ -259,6 +262,24 @@ pub mod info {
             pub side: Side,
             pub sz: String,
             pub timestamp: u64,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct FrontendOpenOrders {
+            pub coin: String,
+            pub is_position_tpsl: bool,
+            pub is_trigger: bool,
+            pub limit_px: String,
+            pub oid: u64,
+            pub order_type: String,
+            pub orig_sz: String,
+            pub reduce_only: bool,
+            pub side: Side,
+            pub sz: String,
+            pub timestamp: u64,
+            pub trigger_condition: String,
+            pub trigger_px: String,
         }
 
         #[derive(Deserialize, Debug)]

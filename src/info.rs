@@ -10,8 +10,8 @@ use crate::{
         info::{
             request::{CandleSnapshotRequest, Request},
             response::{
-                AssetContext, CandleSnapshot, FundingHistory, L2Book, OpenOrder, Universe,
-                UserFill, UserFunding, UserState,
+                AssetContext, CandleSnapshot, FrontendOpenOrders, FundingHistory, L2Book,
+                OpenOrder, Universe, UserFill, UserFunding, UserState,
             },
         },
         API,
@@ -53,6 +53,14 @@ impl Info {
     pub async fn open_orders(&self, user: Address) -> Result<Vec<OpenOrder>> {
         self.client
             .post(&API::Info, &Request::OpenOrders { user })
+            .await
+    }
+
+    /// Retrieve a user's open orders with additional frontend info
+    /// This is useful for displaying orders in a UI
+    pub async fn frontend_open_orders(&self, user: Address) -> Result<Vec<FrontendOpenOrders>> {
+        self.client
+            .post(&API::Info, &Request::FrontendOpenOrders { user })
             .await
     }
 

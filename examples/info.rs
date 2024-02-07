@@ -5,11 +5,11 @@ const SEP: &str = "\n---";
 
 #[tokio::main]
 async fn main() {
-    let user: Address = "0xc64cc00b46101bd40aa1c3121195e85c0b0918d8"
+    let user: Address = "0x88c3101BBAdD72Ab72d14607be02f4040E86dd34"
         .parse()
         .expect("Invalid address");
 
-    let info = Hyperliquid::new(Chain::Arbitrum);
+    let info = Hyperliquid::new(Chain::Dev);
 
     println!("Info API Examples");
 
@@ -18,6 +18,7 @@ async fn main() {
     contexts(&info).await;
     user_state(&info, user).await;
     open_orders(&info, user).await;
+    frontend_open_orders(&info, user).await;
     user_fills(&info, user).await;
     user_funding(&info, user).await;
     funding_history(&info).await;
@@ -48,6 +49,11 @@ async fn user_state(info: &Info, user: Address) {
 async fn open_orders(info: &Info, user: Address) {
     let open_orders = info.open_orders(user).await.unwrap();
     println!("Open orders for {user} \n{:?}{SEP}", open_orders);
+}
+
+async fn frontend_open_orders(info: &Info, user: Address) {
+    let open_orders = info.frontend_open_orders(user).await.unwrap();
+    println!("Frontend Open orders for {user} \n{:?}{SEP}", open_orders);
 }
 
 async fn user_fills(info: &Info, user: Address) {
