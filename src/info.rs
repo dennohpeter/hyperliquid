@@ -11,7 +11,7 @@ use crate::{
             request::{CandleSnapshotRequest, Request},
             response::{
                 AssetContext, CandleSnapshot, FrontendOpenOrders, FundingHistory, L2Book,
-                OpenOrder, Universe, UserFill, UserFunding, UserState,
+                OpenOrder, RecentTrades, Universe, UserFill, UserFunding, UserState,
             },
         },
         API,
@@ -49,6 +49,16 @@ impl Info {
     pub async fn user_state(&self, user: Address) -> Result<UserState> {
         self.client
             .post(&API::Info, &Request::ClearinghouseState { user })
+            .await
+    }
+
+    /// Retrieve a user's state to see user's open positions and margin summary in batch
+    ///
+    /// # Arguments
+    /// * `users` - A list of user addresses in 42-character hexadecimal format
+    pub async fn user_states(&self, users: Vec<Address>) -> Result<Vec<UserState>> {
+        self.client
+            .post(&API::Info, &Request::BatchClearinghouseStates { users })
             .await
     }
 
@@ -163,6 +173,16 @@ impl Info {
     pub async fn l2_book(&self, coin: String) -> Result<L2Book> {
         self.client
             .post(&API::Info, &Request::L2Book { coin })
+            .await
+    }
+
+    /// Retrieve the recent trades for a coin
+    ///
+    /// # Arguments
+    /// * `coin` - The coin to retrieve the recent trades for
+    pub async fn recent_trades(&self, coin: String) -> Result<Vec<RecentTrades>> {
+        self.client
+            .post(&API::Info, &Request::RecentTrades { coin })
             .await
     }
 

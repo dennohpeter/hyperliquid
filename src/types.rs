@@ -123,6 +123,9 @@ pub mod info {
             ClearinghouseState {
                 user: Address,
             },
+            BatchClearinghouseStates {
+                users: Vec<Address>,
+            },
             OpenOrders {
                 user: Address,
             },
@@ -153,6 +156,9 @@ pub mod info {
                 end_time: Option<u64>,
             },
             L2Book {
+                coin: String,
+            },
+            RecentTrades {
                 coin: String,
             },
             CandleSnapshot {
@@ -346,6 +352,17 @@ pub mod info {
         pub struct L2Book {
             pub coin: String,
             pub levels: Vec<Vec<Level>>,
+            pub time: u64,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct RecentTrades {
+            pub coin: String,
+            pub side: Side,
+            pub px: String,
+            pub sz: String,
+            pub hash: String,
             pub time: u64,
         }
 

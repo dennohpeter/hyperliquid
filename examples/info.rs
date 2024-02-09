@@ -25,6 +25,7 @@ async fn main() {
     mids(&info).await;
     contexts(&info).await;
     user_state(&info, user).await;
+    batch_user_states(&info, vec![user]).await;
     open_orders(&info, user).await;
     frontend_open_orders(&info, user).await;
     user_fills(&info, user).await;
@@ -32,6 +33,7 @@ async fn main() {
     user_funding(&info, user).await;
     funding_history(&info).await;
     l2_book(&info).await;
+    recent_trades(&info).await;
     candle_snapshot(&info).await;
 }
 
@@ -53,6 +55,11 @@ async fn contexts(info: &Info) {
 async fn user_state(info: &Info, user: Address) {
     let user_state = info.user_state(user).await.unwrap();
     println!("User state for {user} \n{:?}{SEP}", user_state);
+}
+
+async fn batch_user_states(info: &Info, users: Vec<Address>) {
+    let user_states = info.user_states(users.clone()).await.unwrap();
+    println!("User states for {:?} \n{:?}{SEP}", users, user_states);
 }
 
 async fn open_orders(info: &Info, user: Address) {
@@ -111,6 +118,13 @@ async fn l2_book(info: &Info) {
 
     let l2_book = info.l2_book(coin.to_string()).await.unwrap();
     println!("L2 book for {coin} \n{:?}{SEP}", l2_book);
+}
+
+async fn recent_trades(info: &Info) {
+    let coin = "ETH";
+
+    let recent_trades = info.recent_trades(coin.to_string()).await.unwrap();
+    println!("Recent trades for {coin} \n{:?}{SEP}", recent_trades);
 }
 
 async fn candle_snapshot(info: &Info) {
