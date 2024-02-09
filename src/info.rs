@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::SystemTime};
+use std::collections::HashMap;
 
 use ethers::types::Address;
 
@@ -45,7 +45,7 @@ impl Info {
     /// Retrieve a user's state to see user's open positions and margin summary
     ///
     /// # Arguments
-    /// * `user` - The user's address
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     pub async fn user_state(&self, user: Address) -> Result<UserState> {
         self.client
             .post(&API::Info, &Request::ClearinghouseState { user })
@@ -55,7 +55,7 @@ impl Info {
     /// Retrieve a user's open orders
     ///
     /// # Arguments
-    /// * `user` - The user's address
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     pub async fn open_orders(&self, user: Address) -> Result<Vec<OpenOrder>> {
         self.client
             .post(&API::Info, &Request::OpenOrders { user })
@@ -66,7 +66,7 @@ impl Info {
     /// This is useful for displaying orders in a UI
     ///
     /// # Arguments
-    /// * `user` - The user's address
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     pub async fn frontend_open_orders(&self, user: Address) -> Result<Vec<FrontendOpenOrders>> {
         self.client
             .post(&API::Info, &Request::FrontendOpenOrders { user })
@@ -76,7 +76,7 @@ impl Info {
     /// Retrieve a user's Userfills
     ///
     /// # Arguments
-    /// * `user` - The user's address
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     pub async fn user_fills(&self, user: Address) -> Result<Vec<UserFill>> {
         self.client
             .post(&API::Info, &Request::UserFills { user })
@@ -86,7 +86,7 @@ impl Info {
     /// Retrieve a user's fills by time
     ///
     /// # Arguments
-    /// * `user` - The user's address
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     /// * `start_time` - Start time in milliseconds, inclusive
     /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
     /// * Returns a number of fills limited to 2000
@@ -111,7 +111,7 @@ impl Info {
     /// Retrieve a user's funding history
     ///
     /// # Arguments
-    /// * `user` - The user's address
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     /// * `start_time` - Start time in milliseconds, inclusive
     /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
     pub async fn user_funding(
@@ -195,7 +195,11 @@ impl Info {
             .await
     }
 
-    /// Query the status of an order
+    /// Query the status of an order by `oid` or `cloid`
+    ///
+    /// # Arguments
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
+    /// * `oid` - The order id either u64 representing the order id or 16-byte hex string representing the client order id
     pub async fn order_status(&self, user: Address, oid: u64) -> Result<()> {
         // TODO: This should return an OrderStatus
         self.client
