@@ -43,6 +43,9 @@ impl Info {
     }
 
     /// Retrieve a user's state to see user's open positions and margin summary
+    ///
+    /// # Arguments
+    /// * `user` - The user's address
     pub async fn user_state(&self, user: Address) -> Result<UserState> {
         self.client
             .post(&API::Info, &Request::ClearinghouseState { user })
@@ -50,14 +53,20 @@ impl Info {
     }
 
     /// Retrieve a user's open orders
+    ///
+    /// # Arguments
+    /// * `user` - The user's address
     pub async fn open_orders(&self, user: Address) -> Result<Vec<OpenOrder>> {
         self.client
             .post(&API::Info, &Request::OpenOrders { user })
             .await
     }
 
-    /// Retrieve a user's open orders with additional frontend info
+    /// Retrieve a user's open orders with additional frontend info.
     /// This is useful for displaying orders in a UI
+    ///
+    /// # Arguments
+    /// * `user` - The user's address
     pub async fn frontend_open_orders(&self, user: Address) -> Result<Vec<FrontendOpenOrders>> {
         self.client
             .post(&API::Info, &Request::FrontendOpenOrders { user })
@@ -65,6 +74,9 @@ impl Info {
     }
 
     /// Retrieve a user's Userfills
+    ///
+    /// # Arguments
+    /// * `user` - The user's address
     pub async fn user_fills(&self, user: Address) -> Result<Vec<UserFill>> {
         self.client
             .post(&API::Info, &Request::UserFills { user })
@@ -72,10 +84,12 @@ impl Info {
     }
 
     /// Retrieve a user's fills by time
-    /// user - The user's address
-    /// start_time - Start time in milliseconds, inclusive
-    /// end_time - End time in milliseconds, inclusive. If `None`, it will default to the current time
-    /// Returns a number of fills limited to 2000
+    ///
+    /// # Arguments
+    /// * `user` - The user's address
+    /// * `start_time` - Start time in milliseconds, inclusive
+    /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
+    /// * Returns a number of fills limited to 2000
     pub async fn user_fills_by_time(
         &self,
         user: Address,
@@ -95,6 +109,11 @@ impl Info {
     }
 
     /// Retrieve a user's funding history
+    ///
+    /// # Arguments
+    /// * `user` - The user's address
+    /// * `start_time` - Start time in milliseconds, inclusive
+    /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
     pub async fn user_funding(
         &self,
         user: Address,
@@ -114,6 +133,11 @@ impl Info {
     }
 
     /// Retrieve historical funding rates for a coin
+    ///
+    /// # Arguments
+    /// * `coin` - The coin to retrieve funding history for
+    /// * `start_time` - Start time in milliseconds, inclusive
+    /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
     pub async fn funding_history(
         &self,
         coin: String,
@@ -133,6 +157,9 @@ impl Info {
     }
 
     /// Retrieve the L2 order book for a coin
+    ///
+    /// # Arguments
+    /// * `coin` - The coin to retrieve the L2 order book for
     pub async fn l2_book(&self, coin: String) -> Result<L2Book> {
         self.client
             .post(&API::Info, &Request::L2Book { coin })
@@ -140,6 +167,12 @@ impl Info {
     }
 
     /// Retrieve candle snapshot for a coin
+    ///
+    /// # Arguments
+    /// * `coin` - The coin to retrieve the candle snapshot for
+    /// * `interval` - The interval to retrieve the candle snapshot for
+    /// * `start_time` - Start time in milliseconds, inclusive
+    /// * `end_time` - End time in milliseconds, inclusive.
     pub async fn candle_snapshot(
         &self,
         coin: String,

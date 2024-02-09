@@ -30,9 +30,9 @@ async fn main() {
     user_fills(&info, user).await;
     user_fills_by_time(&info, user, now - 1000000, Some(now)).await;
     user_funding(&info, user).await;
-    // funding_history(&info).await;
-    // l2_book(&info).await;
-    // candle_snapshot(&info).await;
+    funding_history(&info).await;
+    l2_book(&info).await;
+    candle_snapshot(&info).await;
 }
 
 async fn metadata(info: &Info) {
