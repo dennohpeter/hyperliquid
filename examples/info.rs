@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use ethers::types::Address;
 use hyperliquid::{types::exchange::request::Chain, Hyperliquid, Info};
 
@@ -11,6 +13,12 @@ async fn main() {
 
     let info = Hyperliquid::new(Chain::Dev);
 
+    let now = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .expect("Time went backwards");
+
+    let now = now.as_millis() as u64;
+
     println!("Info API Examples");
 
     metadata(&info).await;
@@ -20,10 +28,11 @@ async fn main() {
     open_orders(&info, user).await;
     frontend_open_orders(&info, user).await;
     user_fills(&info, user).await;
+    user_fills_by_time(&info, user, now - 1000000, Some(now)).await;
     user_funding(&info, user).await;
-    funding_history(&info).await;
-    l2_book(&info).await;
-    candle_snapshot(&info).await;
+    // funding_history(&info).await;
+    // l2_book(&info).await;
+    // candle_snapshot(&info).await;
 }
 
 async fn metadata(info: &Info) {
@@ -59,6 +68,12 @@ async fn frontend_open_orders(info: &Info, user: Address) {
 async fn user_fills(info: &Info, user: Address) {
     let user_fills = info.user_fills(user).await.unwrap();
     println!("User fills for {user} \n{:?}{SEP}", user_fills);
+}
+
+async fn user_fills_by_time(info: &Info, user: Address, start_time: u64, end_time: Option<u64>) {
+    let user_fills = info.user_fills_by_time(user, start_time, end_time).await;
+    // .unwrap();
+    println!("User fills by time for {user} \n{:?}{SEP}", user_fills);
 }
 
 async fn user_funding(info: &Info, user: Address) {

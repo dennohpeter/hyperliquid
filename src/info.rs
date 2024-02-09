@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::SystemTime};
 
 use ethers::types::Address;
 
@@ -68,6 +68,29 @@ impl Info {
     pub async fn user_fills(&self, user: Address) -> Result<Vec<UserFill>> {
         self.client
             .post(&API::Info, &Request::UserFills { user })
+            .await
+    }
+
+    /// Retrieve a user's fills by time
+    /// user - The user's address
+    /// start_time - Start time in milliseconds, inclusive
+    /// end_time - End time in milliseconds, inclusive. If `None`, it will default to the current time
+    /// Returns a number of fills limited to 2000
+    pub async fn user_fills_by_time(
+        &self,
+        user: Address,
+        start_time: u64,
+        end_time: Option<u64>,
+    ) -> Result<Vec<UserFill>> {
+        self.client
+            .post(
+                &API::Info,
+                &Request::UserFillsByTime {
+                    user,
+                    start_time,
+                    end_time,
+                },
+            )
             .await
     }
 

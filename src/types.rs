@@ -134,6 +134,13 @@ pub mod info {
                 user: Address,
             },
             #[serde(rename_all = "camelCase")]
+            UserFillsByTime {
+                user: Address,
+                start_time: u64,
+                #[serde(skip_serializing_if = "Option::is_none")]
+                end_time: Option<u64>,
+            },
+            #[serde(rename_all = "camelCase")]
             UserFunding {
                 user: Address,
                 start_time: u64,
