@@ -12,10 +12,10 @@ fn test_parse_price() {
 #[test]
 fn test_parse_size() {
     assert_eq!(parse_size(1.001, 3), "1.001");
-    assert_eq!(parse_size(1.001, 2), "1.00");
-    assert_eq!(parse_size(1.0001, 3), "1.000");
+    assert_eq!(parse_size(1.001, 2), "1");
+    assert_eq!(parse_size(1.0001, 3), "1");
 
     assert_eq!(parse_size(1.001, 0), "1");
 
-    assert_eq!(parse_size(1.001, 5), "1.00100");
+    assert_eq!(parse_size(1.001, 5), "1.001");
 }

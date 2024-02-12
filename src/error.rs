@@ -28,6 +28,8 @@ pub enum Error {
     SubscriptionFailed(Subscription),
     #[error("Missing subscription response: {0:?}")]
     MissingSubscriptionResponse(Subscription),
+    #[error("Rmp serde error: {0:?}")]
+    RmpSerdeError(String),
 }
 
 impl From<reqwest::Error> for Error {

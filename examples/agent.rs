@@ -49,6 +49,7 @@ async fn main() {
         limit_px: "1700".to_string(),
         sz: "0.1".to_string(),
         order_type,
+        cloid: None,
     };
     let vault_address = None;
 

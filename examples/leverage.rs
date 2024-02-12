@@ -14,11 +14,11 @@ async fn main() {
 
     let exchange: Exchange = Hyperliquid::new(Chain::Dev);
 
-    let leverage = 5;
+    let leverage = 2;
     let asset = 4;
     let is_cross = false;
 
-    println!("Updating leverage to {} ...", leverage);
+    println!("Updating leverage to {}x ...", leverage);
 
     let res = exchange
         .update_leverage(wallet.clone(), leverage, asset, is_cross)
@@ -27,9 +27,10 @@ async fn main() {
 
     println!("Response: {:?}", res);
 
-    println!("--\nUpdating isolated margin to for ETH to 1% ...");
-
     let margin = 1;
+
+    println!("--\nUpdating isolated margin for ETH to {margin}% ...");
+
     let res = exchange
         .update_isolated_margin(wallet.clone(), margin, asset)
         .await

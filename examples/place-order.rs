@@ -27,9 +27,11 @@ async fn main() {
         asset,
         is_buy: true,
         reduce_only: false,
-        limit_px: parse_price(1674.0),
-        sz: parse_size(0.1, sz_decimals),
+        limit_px: parse_price(1800.0),
+        sz: parse_size(0.01, sz_decimals),
         order_type,
+        // cloid: Some(H128::random()),
+        cloid: None,
     };
 
     let vault_address = None;

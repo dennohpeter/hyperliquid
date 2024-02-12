@@ -12,9 +12,10 @@ repository = "https://github.com/dennohpeter/hyperliquid"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ethers = { version = "2.0.10", features = ["eip712"] }
+ethers = { version = "2.0.11", features = ["eip712"] }
 futures-util = "0.3.28"
 reqwest = { version = "0.11.20", features = ["json"] }
+rmp-serde = "1.1.2"
 serde = "1.0.188"
 serde_json = "1.0.107"
 thiserror = "1.0.48"

@@ -386,8 +386,13 @@ pub mod info {
 
 pub mod exchange {
     pub mod request {
-        use ethers::types::{Address, Signature, H256};
+        use ethers::{
+            types::{Address, Signature, H128, H256},
+            utils::keccak256,
+        };
         use serde::Serialize;
+
+        use crate::{Error, Result};
 
         #[derive(Clone, Copy, Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
@@ -396,6 +401,8 @@ pub mod exchange {
             Arbitrum,
             ArbitrumGoerli,
         }
+
+        pub type Cloid = H128;
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
@@ -436,50 +443,47 @@ pub mod exchange {
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderRequest {
+            #[serde(rename = "a", alias = "asset")]
             pub asset: u32,
+            #[serde(rename = "b", alias = "isBuy")]
             pub is_buy: bool,
+            #[serde(rename = "p", alias = "limitPx")]
             pub limit_px: String,
+            #[serde(rename = "s", alias = "sz")]
             pub sz: String,
+            #[serde(rename = "r", alias = "reduceOnly", default)]
             pub reduce_only: bool,
+            #[serde(rename = "t", alias = "orderType")]
             pub order_type: OrderType,
-        }
-
-        impl OrderRequest {
-            pub fn get_type(&self) -> (u8, u64) {
-                match &self.order_type {
-                    OrderType::Limit(l) => match l.tif {
-                        Tif::Alo => (1, 0),
-                        Tif::Gtc => (2, 0),
-                        Tif::Ioc => (3, 0),
-                    },
-                    OrderType::Trigger(t) => match (t.is_market, &t.tpsl) {
-                        (true, TpSl::Tp) => (4, t.trigger_px.parse().unwrap()),
-                        (false, TpSl::Tp) => (5, t.trigger_px.parse().unwrap()),
-                        (true, TpSl::Sl) => (6, t.trigger_px.parse().unwrap()),
-                        (false, TpSl::Sl) => (7, t.trigger_px.parse().unwrap()),
-                    },
-                }
-            }
+            #[serde(
+                rename = "c",
+                alias = "cloid",
+                skip_serializing_if = "Option::is_none",
+                default
+            )]
+            pub cloid: Option<Cloid>,
         }
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub enum Grouping {
-            Na = 0,
-        }
-        impl Grouping {
-            pub fn to_i32(&self) -> i32 {
-                match self {
-                    Grouping::Na => 0,
-                }
-            }
+            Na,
         }
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct CancelRequest {
-            pub oid: u64,
+            #[serde(rename = "a", alias = "asset")]
             pub asset: u32,
+            #[serde(rename = "o", alias = "oid")]
+            pub oid: u64,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct CancelByCloidRequest {
+            pub asset: u32,
+            pub cloid: Cloid,
         }
 
         #[derive(Serialize, Debug)]
@@ -501,11 +505,14 @@ pub mod exchange {
         #[serde(rename_all = "camelCase", tag = "type")]
         pub enum Action {
             Order {
-                grouping: Grouping,
                 orders: Vec<OrderRequest>,
+                grouping: Grouping,
             },
             Cancel {
                 cancels: Vec<CancelRequest>,
+            },
+            CancelByCloid {
+                cancels: Vec<CancelByCloidRequest>,
             },
             UsdTransfer {
                 chain: Chain,
@@ -518,8 +525,8 @@ pub mod exchange {
             #[serde(rename_all = "camelCase")]
             UpdateLeverage {
                 asset: u32,
-                leverage: u32,
                 is_cross: bool,
+                leverage: u32,
             },
             #[serde(rename_all = "camelCase")]
             UpdateIsolatedMargin {
@@ -533,6 +540,29 @@ pub mod exchange {
                 agent: Agent,
                 agent_address: Address,
             },
+        }
+
+        impl Action {
+            /// create connection id for agent
+            pub fn connection_id(
+                &self,
+                vault_address: Option<Address>,
+                nonce: u128,
+            ) -> Result<H256> {
+                let mut encoded = rmp_serde::to_vec_named(self)
+                    .map_err(|e| Error::RmpSerdeError(e.to_string()))?;
+
+                encoded.extend((nonce as u64).to_be_bytes());
+
+                if let Some(address) = vault_address {
+                    encoded.push(1);
+                    encoded.extend(address.to_fixed_bytes());
+                } else {
+                    encoded.push(0)
+                }
+
+                Ok(keccak256(encoded).into())
+            }
         }
 
         #[derive(Serialize, Debug)]

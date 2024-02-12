@@ -1,7 +1,3 @@
-pub fn float_to_int_for_hashing(num: f64) -> u64 {
-    (num * 100_000_000.0).round() as u64
-}
-
 /// Parse price to the accepted number of decimals
 /// Prices can have up to 5 significant figures, but no more than 6 decimals places
 ///
@@ -18,7 +14,7 @@ pub fn float_to_int_for_hashing(num: f64) -> u64 {
 pub fn parse_price(px: f64) -> String {
     let px = format!("{px:.6}");
 
-    if px.starts_with("0.") {
+    let px = if px.starts_with("0.") {
         px
     } else {
         let px: Vec<&str> = px.split('.').collect();
@@ -29,7 +25,11 @@ pub fn parse_price(px: f64) -> String {
         let sep = if diff > 0 { "." } else { "" };
 
         format!("{whole}{sep}{decimals:.0$}", diff)
-    }
+    };
+
+    let px = remove_trailing_zeros(&px);
+
+    positive(px)
 }
 
 /// Parse size to the accepted number of decimals.
@@ -42,10 +42,33 @@ pub fn parse_price(px: f64) -> String {
 /// use hyperliquid::utils::parse_size;
 ///
 /// assert_eq!(parse_size(1.001, 3), "1.001");
-/// assert_eq!(parse_size(1.001, 2), "1.00");
-/// assert_eq!(parse_size(1.0001, 3), "1.000");
+/// assert_eq!(parse_size(1.001, 2), "1");
+/// assert_eq!(parse_size(1.0001, 3), "1");
 /// ```
 
 pub fn parse_size(sz: f64, sz_decimals: u32) -> String {
-    format!("{sz:.0$}", sz_decimals as usize)
+    let sz = format!("{sz:.0$}", sz_decimals as usize);
+
+    let px = remove_trailing_zeros(&sz);
+
+    positive(px)
+}
+
+fn remove_trailing_zeros(s: &str) -> String {
+    let mut s = s.to_string();
+    while s.ends_with('0') {
+        s.pop();
+    }
+    if s.ends_with('.') {
+        s.pop();
+    }
+    s
+}
+
+fn positive(value: String) -> String {
+    if value.starts_with('-') {
+        "0".to_string()
+    } else {
+        value
+    }
 }
