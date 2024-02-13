@@ -48,8 +48,6 @@ impl Client {
     }
 
     async fn handler<T: DeserializeOwned>(&self, response: Response) -> Result<T> {
-        // println!("Response: {:?}", response.json::<serde_json::Value>().await);
         response.json::<T>().await.map_err(Into::into)
-        // todo!("Handle response")
     }
 }

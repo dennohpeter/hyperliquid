@@ -15,7 +15,7 @@ use crate::{
         exchange::{
             request::{
                 Action, Agent, CancelByCloidRequest, CancelRequest, Chain, Grouping, OrderRequest,
-                Request, TransferRequest,
+                Request, TransferRequest, WithdrawalRequest,
             },
             response::Response,
         },
@@ -34,7 +34,7 @@ impl Exchange {
     ///
     /// # Arguments
     /// * `wallet` - The wallet to sign the order with
-    /// * `order` - The order to place
+    /// * `orders` - The orders to place
     /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
     ///  e.g. `0x0000000000000000000000000000000000000000`
     ///
@@ -42,14 +42,14 @@ impl Exchange {
     pub async fn place_order(
         &self,
         wallet: Arc<LocalWallet>,
-        order: OrderRequest,
+        orders: Vec<OrderRequest>,
         vault_address: Option<Address>,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
         let action = Action::Order {
             grouping: Grouping::Na,
-            orders: vec![order],
+            orders,
         };
 
         let connection_id = action.connection_id(vault_address, nonce)?;
@@ -70,20 +70,18 @@ impl Exchange {
     ///
     /// # Arguments
     /// * `wallet` - The wallet to sign the order with
-    /// * `cancel` - The order to cancel
+    /// * `cancels` - The orders to cancel
     /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
     /// e.g. `0x0000000000000000000000000000000000000000`
     pub async fn cancel_order(
         &self,
         wallet: Arc<LocalWallet>,
-        cancel: CancelRequest,
+        cancels: Vec<CancelRequest>,
         vault_address: Option<Address>,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let action = Action::Cancel {
-            cancels: vec![cancel],
-        };
+        let action = Action::Cancel { cancels };
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
@@ -103,7 +101,7 @@ impl Exchange {
     ///
     /// # Arguments
     /// * `wallet` - The wallet to sign the order with
-    /// * `cancel` - The client order to cancel
+    /// * `cancels` - The client orders to cancel
     /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
     /// e.g. `0x0000000000000000000000000000000000000000`
     ///
@@ -111,14 +109,12 @@ impl Exchange {
     pub async fn cancel_order_by_cloid(
         &self,
         wallet: Arc<LocalWallet>,
-        cancel: CancelByCloidRequest,
+        cancels: Vec<CancelByCloidRequest>,
         vault_address: Option<Address>,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let action = Action::CancelByCloid {
-            cancels: vec![cancel],
-        };
+        let action = Action::CancelByCloid { cancels };
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
@@ -129,60 +125,6 @@ impl Exchange {
             nonce,
             signature,
             vault_address,
-        };
-
-        self.client.post(&API::Exchange, &request).await
-    }
-
-    /// L1 USDC transfer
-    pub async fn usdc_transfer(
-        &self,
-        from: Arc<LocalWallet>,
-        destination: Address,
-        amount: String,
-    ) -> Result<Response> {
-        let nonce = self.nonce()?;
-
-        let signature = {
-            let destination = to_checksum(&destination, None);
-
-            match self.chain {
-                Chain::Arbitrum => {
-                    from.sign_typed_data(&usd_transfer::mainnet::UsdTransferSignPayload {
-                        destination,
-                        amount: amount.clone(),
-                        time: nonce as u64,
-                    })
-                    .await?
-                }
-                Chain::ArbitrumGoerli => {
-                    from.sign_typed_data(&usd_transfer::testnet::UsdTransferSignPayload {
-                        destination,
-                        amount: amount.clone(),
-                        time: nonce as u64,
-                    })
-                    .await?
-                }
-                Chain::Dev => todo!("Dev chain not supported"),
-            }
-        };
-
-        let payload = TransferRequest {
-            amount,
-            destination: to_checksum(&destination, None),
-            time: nonce,
-        };
-
-        let action = Action::UsdTransfer {
-            chain: self.chain,
-            payload,
-        };
-
-        let request = Request {
-            action,
-            nonce,
-            signature,
-            vault_address: None,
         };
 
         self.client.post(&API::Exchange, &request).await
@@ -284,26 +226,169 @@ impl Exchange {
         self.client.post(&API::Exchange, &request).await
     }
 
+    /// Send usd to another address. This transfer does not touch the EVM bridge. The signature
+    /// format is human readable for wallet interfaces.
+    ///
+    /// # Arguments
+    /// * `from` - The wallet to sign the transfer with
+    /// * `destination` - The address to send the usd to
+    /// * `amount` - The amount of usd to send
+    pub async fn usdc_transfer(
+        &self,
+        from: Arc<LocalWallet>,
+        destination: Address,
+        amount: String,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let signature = {
+            let destination = to_checksum(&destination, None);
+            let time = nonce as u64;
+            let amount = amount.clone();
+
+            match self.chain {
+                Chain::Arbitrum => {
+                    from.sign_typed_data(&usd_transfer::mainnet::UsdTransferSignPayload {
+                        destination,
+                        amount,
+                        time,
+                    })
+                    .await?
+                }
+                Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+                    from.sign_typed_data(&usd_transfer::testnet::UsdTransferSignPayload {
+                        destination,
+                        amount,
+                        time,
+                    })
+                    .await?
+                }
+                _ => todo!("{:?} chain not supported yet", self.chain),
+            }
+        };
+
+        let payload = TransferRequest {
+            amount,
+            destination: to_checksum(&destination, None),
+            time: nonce,
+        };
+        let action = Action::UsdTransfer {
+            chain: match self.chain {
+                Chain::Arbitrum => Chain::Arbitrum,
+                _ => Chain::ArbitrumTestnet,
+            },
+            payload,
+        };
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address: None,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
+    /// Withdraw from bridge
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the transfer with
+    /// * `destination` - The address to send the usd to
+    /// * `usd` - The amount of usd to send
+    pub async fn withdraw_from_bridge(
+        &self,
+        wallet: Arc<LocalWallet>,
+        destination: Address,
+        usd: String,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let signature = {
+            let destination = to_checksum(&destination, None);
+            let time = nonce as u64;
+            let usd = usd.clone();
+
+            match self.chain {
+                Chain::Arbitrum => {
+                    wallet
+                        .sign_typed_data(&usd_transfer::mainnet::WithdrawFromBridge2SignPayload {
+                            destination,
+                            usd,
+                            time,
+                        })
+                        .await?
+                }
+                Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+                    wallet
+                        .sign_typed_data(&usd_transfer::testnet::WithdrawFromBridge2SignPayload {
+                            destination,
+                            usd,
+                            time,
+                        })
+                        .await?
+                }
+                _ => todo!("{:?} chain not supported yet", self.chain),
+            }
+        };
+
+        let payload = WithdrawalRequest {
+            usd,
+            destination: to_checksum(&destination, None),
+            time: nonce,
+        };
+        let action = Action::Withdraw2 {
+            chain: match self.chain {
+                Chain::Arbitrum => Chain::Arbitrum,
+                _ => Chain::ArbitrumTestnet,
+            },
+            payload,
+        };
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address: None,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
     /// Approve an agent to trade on behalf of the user
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the transfer with
+    /// * `agent_address` - The address of the agent to approve
+    /// * `extra_agent_name` - An optional name for the agent
     pub async fn approve_agent(
         &self,
         wallet: Arc<LocalWallet>,
         agent_address: Address,
+        extra_agent_name: Option<String>,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let connection_id = keccak256(agent_address.encode()).into();
+        let connection_id = keccak256(if let Some(ref name) = extra_agent_name {
+            (agent_address, name.to_string()).encode()
+        } else {
+            agent_address.encode()
+        })
+        .into();
 
-        let action = Action::ApproveAgent {
+        let action = Action::Connect {
             chain: match self.chain {
                 Chain::Arbitrum => Chain::Arbitrum,
-                Chain::Dev | Chain::ArbitrumGoerli => Chain::ArbitrumGoerli,
+                Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+                    Chain::ArbitrumTestnet
+                }
             },
             agent: Agent {
                 source: "https://hyperliquid.xyz".to_string(),
                 connection_id,
             },
             agent_address,
+            extra_agent_name,
         };
 
         let signature = self.sign(wallet, connection_id).await?;
@@ -322,7 +407,9 @@ impl Exchange {
     async fn sign(&self, wallet: Arc<LocalWallet>, connection_id: H256) -> Result<Signature> {
         let (chain, source) = match self.chain {
             Chain::Arbitrum => (Chain::Dev, "a".to_string()),
-            Chain::Dev | Chain::ArbitrumGoerli => (Chain::Dev, "b".to_string()),
+            Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+                (Chain::Dev, "b".to_string())
+            }
         };
 
         Ok(match chain {
@@ -333,7 +420,7 @@ impl Exchange {
                 };
                 wallet.sign_typed_data(&payload).await?
             }
-            Chain::ArbitrumGoerli => {
+            Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
                 let payload = testnet::Agent {
                     source,
                     connection_id,

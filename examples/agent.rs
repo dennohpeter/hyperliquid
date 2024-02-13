@@ -34,7 +34,7 @@ async fn main() {
     println!("Agent address: {:?}", agent_address);
 
     let res = exchange
-        .approve_agent(wallet.clone(), agent_address)
+        .approve_agent(wallet.clone(), agent_address, Some("WETH".to_string()))
         .await
         .unwrap();
 
@@ -56,7 +56,7 @@ async fn main() {
     println!("Placing order with agent...");
 
     let response = exchange
-        .place_order(wallet.clone(), order, vault_address)
+        .place_order(wallet.clone(), vec![order], vault_address)
         .await
         .expect("Failed to place order");
 

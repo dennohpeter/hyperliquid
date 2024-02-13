@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ethers::signers::{LocalWallet, Signer};
+use ethers::signers::LocalWallet;
 use hyperliquid::{types::exchange::request::Chain, Exchange, Hyperliquid};
 
 #[tokio::main]
@@ -18,15 +18,12 @@ async fn main() {
         .parse()
         .expect("Invalid address");
 
-    let amount = "1".to_string(); // USD
+    let usd = "10".to_string(); // USD
 
-    println!(
-        "Transferring from {} 1 USDC to {destination} ...",
-        wallet.address()
-    );
+    println!("Withdrawing ${} from bridge to {:?}", usd, destination);
 
     let res = exchange
-        .usdc_transfer(wallet.clone(), destination, amount)
+        .withdraw_from_bridge(wallet.clone(), destination, usd)
         .await
         .unwrap();
 

@@ -38,7 +38,7 @@ async fn main() {
 
     println!("Placing order...");
     let response = exchange
-        .place_order(wallet.clone(), order, vault_address)
+        .place_order(wallet.clone(), vec![order], vault_address)
         .await
         .expect("Failed to place order");
 

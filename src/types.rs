@@ -80,6 +80,19 @@ pub mod usd_transfer {
             pub amount: String,
             pub time: u64,
         }
+
+        #[derive(Eip712, Clone, EthAbiType)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 42161,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        pub struct WithdrawFromBridge2SignPayload {
+            pub destination: String,
+            pub usd: String,
+            pub time: u64,
+        }
     }
 
     pub mod testnet {
@@ -89,12 +102,25 @@ pub mod usd_transfer {
         #[eip712(
             name = "Exchange",
             version = "1",
-            chain_id = 421613,
+            chain_id = 421614,
             verifying_contract = "0x0000000000000000000000000000000000000000"
         )]
         pub struct UsdTransferSignPayload {
             pub destination: String,
             pub amount: String,
+            pub time: u64,
+        }
+
+        #[derive(Eip712, Clone, EthAbiType)]
+        #[eip712(
+            name = "Exchange",
+            version = "1",
+            chain_id = 421614,
+            verifying_contract = "0x0000000000000000000000000000000000000000"
+        )]
+        pub struct WithdrawFromBridge2SignPayload {
+            pub destination: String,
+            pub usd: String,
             pub time: u64,
         }
     }
@@ -400,6 +426,7 @@ pub mod exchange {
             Dev,
             Arbitrum,
             ArbitrumGoerli,
+            ArbitrumTestnet,
         }
 
         pub type Cloid = H128;
@@ -496,6 +523,14 @@ pub mod exchange {
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
+        pub struct WithdrawalRequest {
+            pub destination: String,
+            pub usd: String,
+            pub time: u128,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
         pub struct Agent {
             pub source: String,
             pub connection_id: H256,
@@ -522,6 +557,10 @@ pub mod exchange {
                 usd: String,
                 nonce: u128,
             },
+            Withdraw2 {
+                chain: Chain,
+                payload: WithdrawalRequest,
+            },
             #[serde(rename_all = "camelCase")]
             UpdateLeverage {
                 asset: u32,
@@ -534,11 +573,13 @@ pub mod exchange {
                 is_buy: bool,
                 ntli: i64,
             },
-            #[serde(rename_all = "camelCase", rename = "connect")]
-            ApproveAgent {
+            #[serde(rename_all = "camelCase")]
+            Connect {
                 chain: Chain,
                 agent: Agent,
                 agent_address: Address,
+                #[serde(skip_serializing_if = "Option::is_none")]
+                extra_agent_name: Option<String>,
             },
         }
 

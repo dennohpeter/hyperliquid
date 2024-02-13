@@ -27,7 +27,7 @@ impl Hyperliquid for Info {
     fn new(chain: Chain) -> Self {
         let config = match chain {
             Chain::Arbitrum => Config::mainnet(),
-            Chain::ArbitrumGoerli => Config::testnet(),
+            Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => Config::testnet(),
             Chain::Dev => Config::default(),
         };
         Self::new_with_config(chain, &config)
@@ -44,7 +44,7 @@ impl Hyperliquid for Exchange {
     fn new(chain: Chain) -> Self {
         let config = match chain {
             Chain::Arbitrum => Config::mainnet(),
-            Chain::ArbitrumGoerli => Config::testnet(),
+            Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => Config::testnet(),
             Chain::Dev => Config::default(),
         };
         Self::new_with_config(chain, &config)
@@ -61,7 +61,7 @@ impl Hyperliquid for Websocket {
     fn new(chain: Chain) -> Self {
         let config = match chain {
             Chain::Arbitrum => Config::mainnet(),
-            Chain::ArbitrumGoerli => Config::testnet(),
+            Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => Config::testnet(),
             Chain::Dev => Config::default(),
         };
         Self::new_with_config(chain, &config)
