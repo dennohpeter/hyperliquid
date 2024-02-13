@@ -515,6 +515,13 @@ pub mod exchange {
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
+        pub struct ModifyRequest {
+            pub oid: u64,
+            pub order: OrderRequest,
+        }
+
+        #[derive(Serialize, Debug)]
+        #[serde(rename_all = "camelCase")]
         pub struct TransferRequest {
             pub destination: String,
             pub amount: String,
@@ -549,6 +556,13 @@ pub mod exchange {
             CancelByCloid {
                 cancels: Vec<CancelByCloidRequest>,
             },
+
+            Modify(ModifyRequest),
+
+            BatchModify {
+                modifies: Vec<ModifyRequest>,
+            },
+
             UsdTransfer {
                 chain: Chain,
                 payload: TransferRequest,

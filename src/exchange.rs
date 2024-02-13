@@ -14,8 +14,8 @@ use crate::{
         agent::{l1, mainnet, testnet},
         exchange::{
             request::{
-                Action, Agent, CancelByCloidRequest, CancelRequest, Chain, Grouping, OrderRequest,
-                Request, TransferRequest, WithdrawalRequest,
+                Action, Agent, CancelByCloidRequest, CancelRequest, Chain, Grouping, ModifyRequest,
+                OrderRequest, Request, TransferRequest, WithdrawalRequest,
             },
             response::Response,
         },
@@ -130,17 +130,59 @@ impl Exchange {
         self.client.post(&API::Exchange, &request).await
     }
 
-    /// Initiate a withdrawal request
-    pub async fn withdraw(&self, from: Arc<LocalWallet>, usd: String) -> Result<Response> {
+    /// Modify an order
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the order with
+    /// * `order` - The orders to modify
+    /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
+    /// e.g. `0x0000000000000000000000000000000000000000`
+    ///
+    /// Note: `cloid` in argument `order` is an optional 128 bit hex string, e.g. `0x1234567890abcdef1234567890abcdef`
+    pub async fn modify_order(
+        &self,
+        wallet: Arc<LocalWallet>,
+        order: ModifyRequest,
+        vault_address: Option<Address>,
+    ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let action = Action::Withdraw { usd, nonce };
-
-        let vault_address = None;
+        let action = Action::Modify(order);
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(from, connection_id).await?;
+        let signature = self.sign(wallet, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
+    /// Batch modify orders
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the order with
+    /// * `orders` - The orders to modify
+    /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
+    /// e.g. `0x0000000000000000000000000000000000000000`
+    pub async fn batch_modify_orders(
+        &self,
+        wallet: Arc<LocalWallet>,
+        orders: Vec<ModifyRequest>,
+        vault_address: Option<Address>,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::BatchModify { modifies: orders };
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -398,6 +440,28 @@ impl Exchange {
             nonce,
             signature,
             vault_address: None,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
+    /// Initiate a withdrawal request
+    pub async fn withdraw(&self, from: Arc<LocalWallet>, usd: String) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::Withdraw { usd, nonce };
+
+        let vault_address = None;
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(from, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
         };
 
         self.client.post(&API::Exchange, &request).await
