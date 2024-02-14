@@ -456,8 +456,8 @@ pub mod exchange {
         #[serde(rename_all = "camelCase")]
         pub struct Trigger {
             pub trigger_px: String,
-            pub is_market: bool,
             pub tpsl: TpSl,
+            pub is_market: bool,
         }
 
         #[derive(Serialize, Debug)]
