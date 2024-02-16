@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use ethers::signers::LocalWallet;
+use ethers::{signers::LocalWallet, types::H128};
 use hyperliquid::{
-    types::exchange::request::{Chain, Limit, OrderRequest, OrderType, Tif},
+    types::exchange::request::{Chain, Limit, OrderRequest, OrderType, Tif, TpSl, Trigger},
     utils::{parse_price, parse_size},
     Exchange, Hyperliquid,
 };
@@ -11,7 +11,7 @@ use hyperliquid::{
 async fn main() {
     // Key was randomly generated for testing and shouldn't be used with any real funds
     let wallet: Arc<LocalWallet> = Arc::new(
-        "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
+        "9dd680334f79f0e6c82da3b20a1942c4a9a2e14d1eb32342012bf468c52bd85f"
             .parse()
             .unwrap(),
     );
@@ -21,17 +21,21 @@ async fn main() {
     let asset = 4;
     let sz_decimals = 4;
 
-    let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
+    let order_type = OrderType::Trigger(Trigger {
+        is_market: false,
+        trigger_px: parse_price(2800.0),
+        tpsl: TpSl::Tp,
+    });
+    //  OrderType::Limit(Limit { tif: Tif::Gtc });
 
     let order = OrderRequest {
         asset,
         is_buy: true,
         reduce_only: false,
-        limit_px: parse_price(1800.0),
-        sz: parse_size(0.01, sz_decimals),
+        limit_px: parse_price(2800.0),
+        sz: parse_size(0.0331, sz_decimals),
         order_type,
-        // cloid: Some(H128::random()),
-        cloid: None,
+        cloid: Some(H128::random()),
     };
 
     let vault_address = None;
