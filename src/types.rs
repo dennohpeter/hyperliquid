@@ -235,6 +235,27 @@ pub mod info {
             Meta(Universe),
             Ctx(Vec<Ctx>),
         }
+        impl AssetContext {
+            pub fn ctx(&self, asset: &str) -> Result<Option<&Ctx>, String> {
+                let universe = match self {
+                    AssetContext::Meta(universe) => universe,
+                    _ => return Ok(None),
+                };
+
+                let position = universe
+                    .universe
+                    .iter()
+                    .position(|a| a.name.to_uppercase() == asset.to_uppercase())
+                    .ok_or_else(|| "Asset not found".to_string())?;
+
+                let ctx = match self {
+                    AssetContext::Ctx(ctx) => ctx,
+                    _ => return Ok(None),
+                };
+
+                Ok(ctx.get(position))
+            }
+        }
 
         #[derive(Deserialize, Debug)]
         pub struct Leverage {
