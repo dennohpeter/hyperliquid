@@ -1,11 +1,12 @@
 use std::sync::Arc;
 
-use ethers::{signers::LocalWallet, types::H128};
+use ethers::{
+    signers::LocalWallet,
+    types::{Chain, H128},
+};
 use hyperliquid::{
     types::exchange::{
-        request::{
-            CancelByCloidRequest, CancelRequest, Chain, Limit, OrderRequest, OrderType, Tif,
-        },
+        request::{CancelByCloidRequest, CancelRequest, Limit, OrderRequest, OrderType, Tif},
         response::{Response, Status},
     },
     Exchange, Hyperliquid,

@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
-use ethers::types::Address;
-use hyperliquid::{types::exchange::request::Chain, Hyperliquid, Info};
+use ethers::types::{Address, Chain};
+use hyperliquid::{Hyperliquid, Info};
 
 const SEP: &str = "\n---";
 
