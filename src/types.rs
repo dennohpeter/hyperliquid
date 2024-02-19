@@ -235,27 +235,6 @@ pub mod info {
             Meta(Universe),
             Ctx(Vec<Ctx>),
         }
-        impl AssetContext {
-            pub fn ctx(&self, asset: &str) -> Result<Option<&Ctx>, String> {
-                let universe = match self {
-                    AssetContext::Meta(universe) => universe,
-                    _ => return Ok(None),
-                };
-
-                let position = universe
-                    .universe
-                    .iter()
-                    .position(|a| a.name.to_uppercase() == asset.to_uppercase())
-                    .ok_or_else(|| "Asset not found".to_string())?;
-
-                let ctx = match self {
-                    AssetContext::Ctx(ctx) => ctx,
-                    _ => return Ok(None),
-                };
-
-                Ok(ctx.get(position))
-            }
-        }
 
         #[derive(Deserialize, Debug)]
         pub struct Leverage {
@@ -441,7 +420,7 @@ pub mod exchange {
 
         use crate::{Error, Result};
 
-        #[derive(Clone, Copy, Serialize, Debug)]
+        #[derive(Clone, Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
         pub enum Chain {
             Dev,
@@ -452,7 +431,7 @@ pub mod exchange {
 
         pub type Cloid = H128;
 
-        #[derive(Serialize, Debug)]
+        #[derive(Serialize, Debug, Clone)]
         #[serde(rename_all = "PascalCase")]
         pub enum Tif {
             Gtc,
@@ -460,20 +439,20 @@ pub mod exchange {
             Alo,
         }
 
-        #[derive(Serialize, Debug)]
+        #[derive(Serialize, Debug, Clone)]
         #[serde(rename_all = "camelCase")]
         pub struct Limit {
             pub tif: Tif,
         }
 
-        #[derive(Serialize, Debug)]
+        #[derive(Serialize, Debug, Clone)]
         #[serde(rename_all = "lowercase")]
         pub enum TpSl {
             Tp,
             Sl,
         }
 
-        #[derive(Serialize, Debug)]
+        #[derive(Serialize, Debug, Clone)]
         #[serde(rename_all = "camelCase")]
         pub struct Trigger {
             pub trigger_px: String,
@@ -481,14 +460,14 @@ pub mod exchange {
             pub is_market: bool,
         }
 
-        #[derive(Serialize, Debug)]
+        #[derive(Serialize, Debug, Clone)]
         #[serde(rename_all = "camelCase")]
         pub enum OrderType {
             Limit(Limit),
             Trigger(Trigger),
         }
 
-        #[derive(Serialize, Debug)]
+        #[derive(Serialize, Debug, Clone)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderRequest {
             #[serde(rename = "a", alias = "asset")]
