@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
-use ethers::signers::{LocalWallet, Signer};
+use ethers::{
+    signers::{LocalWallet, Signer},
+    types::Chain,
+};
 use hyperliquid::{
-    types::{
-        exchange::request::Chain,
-        websocket::{
-            request::{Channel, Subscription},
-            response::Response,
-        },
+    types::websocket::{
+        request::{Channel, Subscription},
+        response::Response,
     },
     Hyperliquid, Result, Websocket,
 };

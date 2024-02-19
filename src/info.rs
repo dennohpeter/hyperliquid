@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 
-use ethers::types::Address;
+use ethers::types::{Address, Chain};
 
 use crate::{
     client::Client,
     error::Result,
     types::{
-        exchange::request::Chain,
         info::{
             request::{CandleSnapshotRequest, Request},
             response::{

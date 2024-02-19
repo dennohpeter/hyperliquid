@@ -1,12 +1,9 @@
 use std::collections::HashMap;
 
+use ethers::types::Chain;
+
 use crate::{
-    client::Client,
-    config::Config,
-    exchange::Exchange,
-    info::Info,
-    types::{exchange::request::Chain, API},
-    Websocket,
+    client::Client, config::Config, exchange::Exchange, info::Info, types::API, Websocket,
 };
 
 impl From<&API> for String {
@@ -28,7 +25,7 @@ impl Hyperliquid for Info {
         let config = match chain {
             Chain::Arbitrum => Config::mainnet(),
             Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => Config::testnet(),
-            Chain::Dev => Config::default(),
+            _ => Config::default(),
         };
         Self::new_with_config(chain, &config)
     }
@@ -45,7 +42,7 @@ impl Hyperliquid for Exchange {
         let config = match chain {
             Chain::Arbitrum => Config::mainnet(),
             Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => Config::testnet(),
-            Chain::Dev => Config::default(),
+            _ => Config::default(),
         };
         Self::new_with_config(chain, &config)
     }
@@ -62,7 +59,7 @@ impl Hyperliquid for Websocket {
         let config = match chain {
             Chain::Arbitrum => Config::mainnet(),
             Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => Config::testnet(),
-            Chain::Dev => Config::default(),
+            _ => Config::default(),
         };
         Self::new_with_config(chain, &config)
     }

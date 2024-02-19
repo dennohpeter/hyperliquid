@@ -413,21 +413,12 @@ pub mod info {
 pub mod exchange {
     pub mod request {
         use ethers::{
-            types::{Address, Signature, H128, H256},
+            types::{Address, Signature, H128, H256, Chain},
             utils::keccak256,
         };
         use serde::Serialize;
 
         use crate::{Error, Result};
-
-        #[derive(Clone, Serialize, Debug)]
-        #[serde(rename_all = "PascalCase")]
-        pub enum Chain {
-            Dev,
-            Arbitrum,
-            ArbitrumGoerli,
-            ArbitrumTestnet,
-        }
 
         pub type Cloid = H128;
 

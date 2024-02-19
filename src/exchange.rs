@@ -3,7 +3,7 @@ use std::{sync::Arc, time::SystemTime};
 use ethers::{
     abi::AbiEncode,
     signers::{LocalWallet, Signer},
-    types::{Address, Signature, H256},
+    types::{Address, Chain, Signature, H256},
     utils::{keccak256, to_checksum},
 };
 
@@ -14,7 +14,7 @@ use crate::{
         agent::{l1, mainnet, testnet},
         exchange::{
             request::{
-                Action, Agent, CancelByCloidRequest, CancelRequest, Chain, Grouping, ModifyRequest,
+                Action, Agent, CancelByCloidRequest, CancelRequest, Grouping, ModifyRequest,
                 OrderRequest, Request, TransferRequest, WithdrawalRequest,
             },
             response::Response,
@@ -424,6 +424,7 @@ impl Exchange {
                 Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
                     Chain::ArbitrumTestnet
                 }
+                _ => todo!("{:?} chain not supported yet", self.chain),
             },
             agent: Agent {
                 source: "https://hyperliquid.xyz".to_string(),
@@ -474,6 +475,7 @@ impl Exchange {
             Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
                 (Chain::Dev, "b".to_string())
             }
+            _ => todo!("{:?} chain not supported yet", self.chain),
         };
 
         Ok(match chain {
@@ -499,6 +501,8 @@ impl Exchange {
 
                 wallet.sign_typed_data(&payload).await?
             }
+
+            _ => todo!("{:?} chain not supported yet", self.chain),
         })
     }
 
