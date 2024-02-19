@@ -431,7 +431,7 @@ pub mod exchange {
 
         pub type Cloid = H128;
 
-        #[derive(Serialize, Debug, Clone)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
         pub enum Tif {
             Gtc,
@@ -439,20 +439,20 @@ pub mod exchange {
             Alo,
         }
 
-        #[derive(Serialize, Debug, Clone)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Limit {
             pub tif: Tif,
         }
 
-        #[derive(Serialize, Debug, Clone)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "lowercase")]
         pub enum TpSl {
             Tp,
             Sl,
         }
 
-        #[derive(Serialize, Debug, Clone)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Trigger {
             pub trigger_px: String,
@@ -460,14 +460,14 @@ pub mod exchange {
             pub is_market: bool,
         }
 
-        #[derive(Serialize, Debug, Clone)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub enum OrderType {
             Limit(Limit),
             Trigger(Trigger),
         }
 
-        #[derive(Serialize, Debug, Clone)]
+        #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderRequest {
             #[serde(rename = "a", alias = "asset")]
