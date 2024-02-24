@@ -1,3 +1,6 @@
+use serde::Serializer;
+use uuid::Uuid;
+
 /// Parse price to the accepted number of decimals
 /// Prices can have up to 5 significant figures, but no more than 6 decimals places
 ///
@@ -70,5 +73,16 @@ fn positive(value: String) -> String {
         "0".to_string()
     } else {
         value
+    }
+}
+
+pub fn as_hex<S>(cloid: &Option<Uuid>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    if let Some(cloid) = cloid {
+        s.serialize_str(&format!("0x{}", cloid.simple()))
+    } else {
+        s.serialize_none()
     }
 }
