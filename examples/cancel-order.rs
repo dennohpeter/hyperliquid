@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use ethers::{
-    signers::LocalWallet,
-    types::{Chain, H128},
-};
+use ethers::{signers::LocalWallet, types::Chain};
 use hyperliquid::{
     types::exchange::{
         request::{CancelByCloidRequest, CancelRequest, Limit, OrderRequest, OrderType, Tif},
@@ -11,6 +8,7 @@ use hyperliquid::{
     },
     Exchange, Hyperliquid,
 };
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() {
@@ -76,7 +74,7 @@ async fn main() {
     println!("Placing order with client order id (cloid)...");
     let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
 
-    let cloid = H128::random();
+    let cloid = Uuid::new_v4();
 
     println!("Client order id (cloid): {:?}", cloid);
     let order = OrderRequest {

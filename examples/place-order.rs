@@ -1,14 +1,12 @@
 use std::sync::Arc;
 
-use ethers::{
-    signers::LocalWallet,
-    types::{Chain, H128},
-};
+use ethers::{signers::LocalWallet, types::Chain};
 use hyperliquid::{
     types::exchange::request::{Limit, OrderRequest, OrderType, Tif, TpSl, Trigger},
     utils::{parse_price, parse_size},
     Exchange, Hyperliquid,
 };
+use uuid::Uuid;
 
 #[tokio::main]
 async fn main() {
@@ -24,12 +22,7 @@ async fn main() {
     let asset = 4;
     let sz_decimals = 4;
 
-    let order_type = OrderType::Trigger(Trigger {
-        is_market: false,
-        trigger_px: parse_price(2800.0),
-        tpsl: TpSl::Tp,
-    });
-    //  OrderType::Limit(Limit { tif: Tif::Gtc });
+    let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
 
     let order = OrderRequest {
         asset,
@@ -38,12 +31,62 @@ async fn main() {
         limit_px: parse_price(2800.0),
         sz: parse_size(0.0331, sz_decimals),
         order_type,
-        cloid: Some(H128::random()),
+        cloid: None,
     };
 
     let vault_address = None;
 
     println!("Placing order...");
+    let response = exchange
+        .place_order(wallet.clone(), vec![order], vault_address)
+        .await
+        .expect("Failed to place order");
+
+    println!("Response: {:?}", response);
+
+    println!("-----------------");
+    println!("Placing an order with cloid...");
+
+    let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
+
+    let cloid = Uuid::new_v4();
+
+    let order = OrderRequest {
+        asset,
+        is_buy: true,
+        reduce_only: false,
+        limit_px: parse_price(2800.0),
+        sz: parse_size(0.0331, sz_decimals),
+        order_type,
+        cloid: Some(cloid),
+    };
+
+    let response = exchange
+        .place_order(wallet.clone(), vec![order], vault_address)
+        .await
+        .expect("Failed to place order");
+
+    println!("Response: {:?}", response);
+
+    println!("-----------------");
+    println!("Placing an order with tpsl...");
+
+    let order_type = OrderType::Trigger(Trigger {
+        is_market: false,
+        trigger_px: parse_price(2800.0),
+        tpsl: TpSl::Tp,
+    });
+
+    let order = OrderRequest {
+        asset,
+        is_buy: true,
+        reduce_only: false,
+        limit_px: parse_price(2800.0),
+        sz: parse_size(0.0331, sz_decimals),
+        order_type,
+        cloid: Some(cloid),
+    };
+
     let response = exchange
         .place_order(wallet.clone(), vec![order], vault_address)
         .await

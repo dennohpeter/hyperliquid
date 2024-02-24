@@ -413,14 +413,15 @@ pub mod info {
 pub mod exchange {
     pub mod request {
         use ethers::{
-            types::{Address, Signature, H128, H256, Chain},
+            types::{Address, Chain, Signature, H256},
             utils::keccak256,
         };
         use serde::Serialize;
+        use uuid::Uuid;
 
-        use crate::{Error, Result};
+        use crate::{utils::as_hex, Error, Result};
 
-        pub type Cloid = H128;
+        pub type Cloid = Uuid;
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
@@ -446,9 +447,9 @@ pub mod exchange {
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Trigger {
+            pub is_market: bool,
             pub trigger_px: String,
             pub tpsl: TpSl,
-            pub is_market: bool,
         }
 
         #[derive(Serialize, Debug)]
@@ -476,8 +477,8 @@ pub mod exchange {
             #[serde(
                 rename = "c",
                 alias = "cloid",
-                skip_serializing_if = "Option::is_none",
-                default
+                serialize_with = "as_hex",
+                skip_serializing_if = "Option::is_none"
             )]
             pub cloid: Option<Cloid>,
         }
