@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
-use ethers::{signers::LocalWallet, types::Chain};
+use ethers::signers::LocalWallet;
 use hyperliquid::{
-    types::exchange::{
-        request::{CancelByCloidRequest, CancelRequest, Limit, OrderRequest, OrderType, Tif},
-        response::{Response, Status},
+    types::{
+        exchange::{
+            request::{CancelByCloidRequest, CancelRequest, Limit, OrderRequest, OrderType, Tif},
+            response::{Response, Status},
+        },
+        Chain,
     },
     Exchange, Hyperliquid,
 };
@@ -56,10 +59,11 @@ async fn main() {
 
     println!("Order placed: {:?}", oid);
 
-    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+
     // Cancel order
 
-    println!("Cancelling order...");
+    println!("Cancelling order with oid {oid}.");
     let cancel = CancelRequest { asset: 4, oid };
 
     let vault_address = None;
@@ -71,12 +75,12 @@ async fn main() {
 
     println!("Response: {:?}", response);
 
-    println!("Placing order with client order id (cloid)...");
-    let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
-
     let cloid = Uuid::new_v4();
 
-    println!("Client order id (cloid): {:?}", cloid);
+    println!("Placing order with cloid: {}", cloid.simple());
+
+    let order_type = OrderType::Limit(Limit { tif: Tif::Gtc });
+
     let order = OrderRequest {
         asset: 4,
         is_buy: true,
@@ -109,10 +113,10 @@ async fn main() {
 
     println!("Order placed: {:?}", oid);
 
-    println!("Cancelling order with cloid {cloid}...");
-    let cancel = CancelByCloidRequest { asset: 4, cloid };
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
 
-    let vault_address = None;
+    println!("Cancelling order with cloid: {}", cloid.simple());
+    let cancel = CancelByCloidRequest { asset: 4, cloid };
 
     let response = exchange
         .cancel_order_by_cloid(wallet.clone(), vec![cancel], vault_address)

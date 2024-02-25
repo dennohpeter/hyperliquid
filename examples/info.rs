@@ -2,12 +2,12 @@ use std::{sync::Arc, time::SystemTime};
 
 use ethers::{
     signers::{LocalWallet, Signer},
-    types::{Address, Chain},
+    types::Address,
 };
 use hyperliquid::{
     types::{
         exchange::request::{Limit, OrderRequest, OrderType, Tif},
-        Oid,
+        Chain, Oid,
     },
     utils::{parse_price, parse_size},
     Exchange, Hyperliquid, Info,
@@ -20,7 +20,7 @@ const SEP: &str = "\n---";
 async fn main() {
     // Key was randomly generated for testing and shouldn't be used with any real funds
     let wallet: Arc<LocalWallet> = Arc::new(
-        "9dd680334f79f0e6c82da3b20a1942c4a9a2e14d1eb32342012bf468c52bd85f"
+        "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
             .parse()
             .unwrap(),
     );

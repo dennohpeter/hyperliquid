@@ -30,6 +30,8 @@ pub enum Error {
     MissingSubscriptionResponse(Subscription),
     #[error("Rmp serde error: {0:?}")]
     RmpSerdeError(String),
+    #[error("Chain {0} not supported")]
+    ChainNotSupported(String),
 }
 
 impl From<reqwest::Error> for Error {

@@ -3,7 +3,7 @@ use std::{sync::Arc, time::SystemTime};
 use ethers::{
     abi::AbiEncode,
     signers::{LocalWallet, Signer},
-    types::{Address, Chain, Signature, H256},
+    types::{Address, Signature, H256},
     utils::{keccak256, to_checksum},
 };
 
@@ -19,8 +19,9 @@ use crate::{
             },
             response::Response,
         },
-        usd_transfer, API,
+        usd_transfer, Chain, API,
     },
+    Error,
 };
 
 /// Endpoint to interact with and trade on the Hyperliquid chain.
@@ -38,7 +39,8 @@ impl Exchange {
     /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
     ///  e.g. `0x0000000000000000000000000000000000000000`
     ///
-    ///  Note: `cloid` in argument `order` is an optional 128 bit hex string, e.g. `0x1234567890abcdef1234567890abcdef`
+    ///  # Note
+    /// * `cloid` in argument `order` is an optional 128 bit hex string, e.g. `0x1234567890abcdef1234567890abcdef`
     pub async fn place_order(
         &self,
         wallet: Arc<LocalWallet>,
@@ -297,7 +299,7 @@ impl Exchange {
                     })
                     .await?
                 }
-                Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+                Chain::ArbitrumTestnet => {
                     from.sign_typed_data(&usd_transfer::testnet::UsdTransferSignPayload {
                         destination,
                         amount,
@@ -305,7 +307,7 @@ impl Exchange {
                     })
                     .await?
                 }
-                _ => todo!("{:?} chain not supported yet", self.chain),
+                _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
             }
         };
 
@@ -370,7 +372,7 @@ impl Exchange {
                         })
                         .await?
                 }
-                _ => todo!("{:?} chain not supported yet", self.chain),
+                _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
             }
         };
 
@@ -424,7 +426,7 @@ impl Exchange {
                 Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
                     Chain::ArbitrumTestnet
                 }
-                _ => todo!("{:?} chain not supported yet", self.chain),
+                _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
             },
             agent: Agent {
                 source: "https://hyperliquid.xyz".to_string(),
@@ -475,7 +477,7 @@ impl Exchange {
             Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
                 (Chain::Dev, "b".to_string())
             }
-            _ => todo!("{:?} chain not supported yet", self.chain),
+            _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
         };
 
         Ok(match chain {
@@ -502,7 +504,7 @@ impl Exchange {
                 wallet.sign_typed_data(&payload).await?
             }
 
-            _ => todo!("{:?} chain not supported yet", self.chain),
+            _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
         })
     }
 

@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
-use ethers::{signers::LocalWallet, types::Chain};
+use ethers::signers::LocalWallet;
 use hyperliquid::{
-    types::exchange::{
-        request::{Limit, ModifyRequest, OrderRequest, OrderType, Tif},
-        response::{Response, Status},
+    types::{
+        exchange::{
+            request::{Limit, ModifyRequest, OrderRequest, OrderType, Tif},
+            response::{Response, Status},
+        },
+        Chain,
     },
     Exchange, Hyperliquid,
 };
@@ -57,16 +60,17 @@ async fn main() {
 
     println!("Order placed: {:?}", oid);
 
-    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
 
+    let limit_px = "1710".to_string();
     // Modifying the order
-    println!("Modifying order with oid {oid}...");
+    println!("Modifying order {oid} limit price to {limit_px}.");
 
     let order = OrderRequest {
         asset: 4,
         is_buy: true,
         reduce_only: false,
-        limit_px: "1710".to_string(),
+        limit_px,
         sz: "0.1".to_string(),
         order_type: OrderType::Limit(Limit { tif: Tif::Gtc }),
         cloid: Some(cloid),
@@ -74,10 +78,8 @@ async fn main() {
 
     let order = ModifyRequest { order, oid };
 
-    let vault_address = None;
-
     let response = exchange
-        .batch_modify_orders(wallet.clone(), vec![order], vault_address)
+        .modify_order(wallet.clone(), order, vault_address)
         .await
         .expect("Failed to modify order");
 

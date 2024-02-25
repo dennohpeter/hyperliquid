@@ -1,8 +1,10 @@
-use ethers::types::Chain;
 use hyperliquid::{
-    types::websocket::{
-        request::{Channel, Subscription},
-        response::Response,
+    types::{
+        websocket::{
+            request::{Channel, Subscription},
+            response::Response,
+        },
+        Chain,
     },
     Hyperliquid, Result, Websocket,
 };

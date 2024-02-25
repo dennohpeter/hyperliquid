@@ -1,6 +1,31 @@
 use crate::utils::as_hex;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+pub enum Chain {
+    Dev = 1337,
+
+    Arbitrum = 42161,
+    ArbitrumTestnet = 421611,
+    ArbitrumGoerli = 421613,
+    ArbitrumSepolia = 421614,
+    ArbitrumNova = 42170,
+}
+
+impl ToString for Chain {
+    fn to_string(&self) -> String {
+        String::from(match self {
+            Chain::Dev => "Dev",
+            Chain::Arbitrum => "Arbitrum",
+            Chain::ArbitrumTestnet => "ArbitrumTestnet",
+            Chain::ArbitrumGoerli => "ArbitrumGoerli",
+            Chain::ArbitrumSepolia => "ArbitrumSepolia",
+            Chain::ArbitrumNova => "ArbitrumNova",
+        })
+    }
+}
 
 pub enum API {
     Info,
@@ -214,8 +239,6 @@ pub mod info {
 
     pub mod response {
         use serde::Deserialize;
-
-        use crate::types::Cloid;
 
         #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
@@ -466,13 +489,13 @@ pub mod info {
 pub mod exchange {
     pub mod request {
         use ethers::{
-            types::{Address, Chain, Signature, H256},
+            types::{Address, Signature, H256},
             utils::keccak256,
         };
         use serde::Serialize;
 
         use crate::{
-            types::Cloid,
+            types::{Chain, Cloid},
             utils::{as_hex, as_hex_option},
             Error, Result,
         };

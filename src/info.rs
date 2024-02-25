@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ethers::types::{Address, Chain};
+use ethers::types::Address;
 
 use crate::{
     client::Client,
@@ -13,7 +13,7 @@ use crate::{
                 OpenOrder, OrderStatus, RecentTrades, Universe, UserFill, UserFunding, UserState,
             },
         },
-        Oid, API,
+        Chain, Oid, API,
     },
 };
 

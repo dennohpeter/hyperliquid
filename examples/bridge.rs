@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use ethers::{signers::LocalWallet, types::Chain};
-use hyperliquid::{Exchange, Hyperliquid};
+use ethers::signers::LocalWallet;
+use hyperliquid::{types::Chain, Exchange, Hyperliquid};
 
 #[tokio::main]
 async fn main() {

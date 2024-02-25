@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
-use ethers::{signers::LocalWallet, types::Chain};
+use ethers::signers::LocalWallet;
 use hyperliquid::{
-    types::exchange::request::{Limit, OrderRequest, OrderType, Tif, TpSl, Trigger},
+    types::{
+        exchange::request::{Limit, OrderRequest, OrderType, Tif, TpSl, Trigger},
+        Chain,
+    },
     utils::{parse_price, parse_size},
     Exchange, Hyperliquid,
 };
@@ -12,7 +15,7 @@ use uuid::Uuid;
 async fn main() {
     // Key was randomly generated for testing and shouldn't be used with any real funds
     let wallet: Arc<LocalWallet> = Arc::new(
-        "9dd680334f79f0e6c82da3b20a1942c4a9a2e14d1eb32342012bf468c52bd85f"
+        "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
             .parse()
             .unwrap(),
     );
@@ -69,7 +72,7 @@ async fn main() {
     println!("Response: {:?}", response);
 
     println!("-----------------");
-    println!("Placing an order with tpsl...");
+    println!("Placing a trigger order with tpsl...");
 
     let order_type = OrderType::Trigger(Trigger {
         is_market: false,

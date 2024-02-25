@@ -1,9 +1,12 @@
 use std::collections::HashMap;
 
-use ethers::types::Chain;
-
 use crate::{
-    client::Client, config::Config, exchange::Exchange, info::Info, types::API, Websocket,
+    client::Client,
+    config::Config,
+    exchange::Exchange,
+    info::Info,
+    types::{Chain, API},
+    Websocket,
 };
 
 impl From<&API> for String {

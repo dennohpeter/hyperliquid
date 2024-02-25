@@ -7,10 +7,12 @@ use std::sync::Arc;
 use ethers::{
     core::rand::thread_rng,
     signers::{LocalWallet, Signer},
-    types::Chain,
 };
 use hyperliquid::{
-    types::exchange::request::{Limit, OrderRequest, OrderType, Tif},
+    types::{
+        exchange::request::{Limit, OrderRequest, OrderType, Tif},
+        Chain,
+    },
     Exchange, Hyperliquid,
 };
 
