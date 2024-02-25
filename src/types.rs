@@ -1,8 +1,21 @@
+use crate::utils::as_hex;
+use serde::Serialize;
+use uuid::Uuid;
+
 pub enum API {
     Info,
     Exchange,
 }
 
+pub type Cloid = Uuid;
+
+#[derive(Serialize, Debug)]
+#[serde(untagged)]
+pub enum Oid {
+    Order(u64),
+    #[serde(serialize_with = "as_hex")]
+    Cloid(Cloid),
+}
 pub mod agent {
     pub mod mainnet {
         use ethers::{
@@ -131,6 +144,8 @@ pub mod info {
         use ethers::types::Address;
         use serde::Serialize;
 
+        use crate::types::Oid;
+
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct CandleSnapshotRequest {
@@ -192,13 +207,15 @@ pub mod info {
             },
             OrderStatus {
                 user: Address,
-                oid: u64,
+                oid: Oid,
             },
         }
     }
 
     pub mod response {
         use serde::Deserialize;
+
+        use crate::types::Cloid;
 
         #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
@@ -407,6 +424,42 @@ pub mod info {
             pub t: u64,
             pub v: String,
         }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct OrderInfo {
+            pub children: Vec<Option<serde_json::Value>>,
+            pub cloid: String,
+            pub coin: String,
+            pub is_position_tpsl: bool,
+            pub is_trigger: bool,
+            pub limit_px: String,
+            pub oid: i64,
+            pub order_type: String,
+            pub orig_sz: String,
+            pub reduce_only: bool,
+            pub side: String,
+            pub sz: String,
+            pub tif: String,
+            pub timestamp: i64,
+            pub trigger_condition: String,
+            pub trigger_px: String,
+        }
+
+        #[derive(Debug, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct Order {
+            pub order: OrderInfo,
+            pub status: String,
+            pub status_timestamp: i64,
+        }
+
+        #[derive(Deserialize, Debug)]
+        #[serde(rename_all = "camelCase")]
+        pub struct OrderStatus {
+            pub order: Order,
+            pub status: String,
+        }
     }
 }
 
@@ -417,11 +470,12 @@ pub mod exchange {
             utils::keccak256,
         };
         use serde::Serialize;
-        use uuid::Uuid;
 
-        use crate::{utils::as_hex, Error, Result};
-
-        pub type Cloid = Uuid;
+        use crate::{
+            types::Cloid,
+            utils::{as_hex, as_hex_option},
+            Error, Result,
+        };
 
         #[derive(Serialize, Debug)]
         #[serde(rename_all = "PascalCase")]
@@ -477,7 +531,7 @@ pub mod exchange {
             #[serde(
                 rename = "c",
                 alias = "cloid",
-                serialize_with = "as_hex",
+                serialize_with = "as_hex_option",
                 skip_serializing_if = "Option::is_none"
             )]
             pub cloid: Option<Cloid>,
@@ -502,6 +556,7 @@ pub mod exchange {
         #[serde(rename_all = "camelCase")]
         pub struct CancelByCloidRequest {
             pub asset: u32,
+            #[serde(serialize_with = "as_hex")]
             pub cloid: Cloid,
         }
 

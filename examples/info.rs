@@ -1,17 +1,35 @@
-use std::time::SystemTime;
+use std::{sync::Arc, time::SystemTime};
 
-use ethers::types::{Address, Chain};
-use hyperliquid::{Hyperliquid, Info};
+use ethers::{
+    signers::{LocalWallet, Signer},
+    types::{Address, Chain},
+};
+use hyperliquid::{
+    types::{
+        exchange::request::{Limit, OrderRequest, OrderType, Tif},
+        Oid,
+    },
+    utils::{parse_price, parse_size},
+    Exchange, Hyperliquid, Info,
+};
+use uuid::Uuid;
 
 const SEP: &str = "\n---";
 
 #[tokio::main]
 async fn main() {
-    let user: Address = "0x88c3101BBAdD72Ab72d14607be02f4040E86dd34"
-        .parse()
-        .expect("Invalid address");
+    // Key was randomly generated for testing and shouldn't be used with any real funds
+    let wallet: Arc<LocalWallet> = Arc::new(
+        "9dd680334f79f0e6c82da3b20a1942c4a9a2e14d1eb32342012bf468c52bd85f"
+            .parse()
+            .unwrap(),
+    );
+
+    let user = wallet.address();
 
     let info = Hyperliquid::new(Chain::Dev);
+
+    let exchange = Hyperliquid::new(Chain::Dev);
 
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
@@ -35,6 +53,7 @@ async fn main() {
     l2_book(&info).await;
     recent_trades(&info).await;
     candle_snapshot(&info).await;
+    order_status(&info, &exchange, wallet).await;
 }
 
 async fn metadata(info: &Info) {
@@ -143,4 +162,37 @@ async fn candle_snapshot(info: &Info) {
         .await
         .unwrap();
     println!("Candle snapshot for {coin} between {start_timestamp} and {end_timestamp} with interval {interval} \n{:?}{SEP}",snapshot);
+}
+
+async fn order_status(info: &Info, exchange: &Exchange, wallet: Arc<LocalWallet>) {
+    let user = wallet.address();
+    let vault_address = None;
+    let cloid = Uuid::new_v4();
+    let order = OrderRequest {
+        asset: 4,
+        is_buy: true,
+        reduce_only: false,
+        limit_px: parse_price(2800.0),
+        sz: parse_size(0.0331, 4),
+        order_type: OrderType::Limit(Limit { tif: Tif::Gtc }),
+        cloid: Some(cloid),
+    };
+
+    println!("Placing order with cloid: {}{SEP}", cloid.simple());
+    let response = exchange
+        .place_order(wallet, vec![order], vault_address)
+        .await
+        .expect("Failed to place order");
+
+    println!("Response: {:?}", response);
+
+    tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+
+    let order_status = info.order_status(user, Oid::Cloid(cloid)).await.unwrap();
+
+    println!(
+        "Order status for {} \n{:?}{SEP}",
+        cloid.simple(),
+        order_status
+    );
 }

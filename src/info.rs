@@ -10,10 +10,10 @@ use crate::{
             request::{CandleSnapshotRequest, Request},
             response::{
                 AssetContext, CandleSnapshot, FrontendOpenOrders, FundingHistory, L2Book,
-                OpenOrder, RecentTrades, Universe, UserFill, UserFunding, UserState,
+                OpenOrder, OrderStatus, RecentTrades, Universe, UserFill, UserFunding, UserState,
             },
         },
-        API,
+        Oid, API,
     },
 };
 
@@ -98,7 +98,9 @@ impl Info {
     /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     /// * `start_time` - Start time in milliseconds, inclusive
     /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
-    /// * Returns a number of fills limited to 2000
+    ///
+    /// # Note
+    /// * Number of fills is limited to 2000
     pub async fn user_fills_by_time(
         &self,
         user: Address,
@@ -144,7 +146,7 @@ impl Info {
     /// Retrieve historical funding rates for a coin
     ///
     /// # Arguments
-    /// * `coin` - The coin to retrieve funding history for
+    /// * `coin` - The coin to retrieve funding history for e.g `BTC`, `ETH`, etc
     /// * `start_time` - Start time in milliseconds, inclusive
     /// * `end_time` - End time in milliseconds, inclusive. If `None`, it will default to the current time
     pub async fn funding_history(
@@ -168,7 +170,7 @@ impl Info {
     /// Retrieve the L2 order book for a coin
     ///
     /// # Arguments
-    /// * `coin` - The coin to retrieve the L2 order book for
+    /// * `coin` - The coin to retrieve the L2 order book for e.g `BTC`, `ETH`, etc
     pub async fn l2_book(&self, coin: String) -> Result<L2Book> {
         self.client
             .post(&API::Info, &Request::L2Book { coin })
@@ -188,7 +190,7 @@ impl Info {
     /// Retrieve candle snapshot for a coin
     ///
     /// # Arguments
-    /// * `coin` - The coin to retrieve the candle snapshot for
+    /// * `coin` - The coin to retrieve the candle snapshot for e.g `BTC`, `ETH`, etc
     /// * `interval` - The interval to retrieve the candle snapshot for
     /// * `start_time` - Start time in milliseconds, inclusive
     /// * `end_time` - End time in milliseconds, inclusive.
@@ -219,8 +221,7 @@ impl Info {
     /// # Arguments
     /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     /// * `oid` - The order id either u64 representing the order id or 16-byte hex string representing the client order id
-    pub async fn order_status(&self, user: Address, oid: u64) -> Result<()> {
-        // TODO: This should return an OrderStatus
+    pub async fn order_status(&self, user: Address, oid: Oid) -> Result<OrderStatus> {
         self.client
             .post(&API::Info, &Request::OrderStatus { user, oid })
             .await

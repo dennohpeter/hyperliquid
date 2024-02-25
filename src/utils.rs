@@ -76,7 +76,7 @@ fn positive(value: String) -> String {
     }
 }
 
-pub fn as_hex<S>(cloid: &Option<Uuid>, s: S) -> Result<S::Ok, S::Error>
+pub fn as_hex_option<S>(cloid: &Option<Uuid>, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -85,4 +85,11 @@ where
     } else {
         s.serialize_none()
     }
+}
+
+pub fn as_hex<S>(cloid: &Uuid, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(&format!("0x{}", cloid.simple()))
 }
