@@ -25,7 +25,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Chain::ArbitrumTestnet);
 
     // Create a new wallet with the agent. This agent can't transfer or withdraw funds
     // but can place orders.

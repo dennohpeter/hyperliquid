@@ -363,7 +363,7 @@ impl Exchange {
                         })
                         .await?
                 }
-                Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+                Chain::ArbitrumTestnet => {
                     wallet
                         .sign_typed_data(&usd_transfer::testnet::WithdrawFromBridge2SignPayload {
                             destination,
@@ -423,9 +423,7 @@ impl Exchange {
         let action = Action::Connect {
             chain: match self.chain {
                 Chain::Arbitrum => Chain::Arbitrum,
-                Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
-                    Chain::ArbitrumTestnet
-                }
+                Chain::ArbitrumTestnet => Chain::ArbitrumTestnet,
                 _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
             },
             agent: Agent {
@@ -488,7 +486,7 @@ impl Exchange {
                 };
                 wallet.sign_typed_data(&payload).await?
             }
-            Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
+            Chain::ArbitrumTestnet => {
                 let payload = testnet::Agent {
                     source,
                     connection_id,
