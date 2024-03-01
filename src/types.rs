@@ -2,7 +2,7 @@ use crate::utils::as_hex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "PascalCase")]
 pub enum Chain {
     Dev = 1337,
@@ -664,6 +664,21 @@ pub mod exchange {
                 agent_address: Address,
                 #[serde(skip_serializing_if = "Option::is_none")]
                 extra_agent_name: Option<String>,
+            },
+            CreateSubAccount {
+                name: String,
+            },
+            #[serde(rename_all = "camelCase")]
+            SubAccountTransfer {
+                sub_account_user: String,
+                is_deposit: bool,
+                usd: String,
+            },
+            SetReferrer {
+                code: String,
+            },
+            ScheduleCancel {
+                time: u128,
             },
         }
 

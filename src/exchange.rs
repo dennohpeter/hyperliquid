@@ -337,7 +337,7 @@ impl Exchange {
     /// Withdraw from bridge
     ///
     /// # Arguments
-    /// * `wallet` - The wallet to sign the transfer with
+    /// * `wallet` - The wallet to sign the withdrawal with
     /// * `destination` - The address to send the usd to
     /// * `usd` - The amount of usd to send
     pub async fn withdraw_from_bridge(
@@ -402,7 +402,7 @@ impl Exchange {
     /// Approve an agent to trade on behalf of the user
     ///
     /// # Arguments
-    /// * `wallet` - The wallet to sign the transfer with
+    /// * `wallet` - The wallet to sign the approval with
     /// * `agent_address` - The address of the agent to approve
     /// * `extra_agent_name` - An optional name for the agent
     pub async fn approve_agent(
@@ -447,6 +447,10 @@ impl Exchange {
     }
 
     /// Initiate a withdrawal request
+    ///
+    /// # Arguments
+    /// * `from` - The wallet to sign the withdrawal with
+    /// * `usd` - The amount of usd to send
     pub async fn withdraw(&self, from: Arc<LocalWallet>, usd: String) -> Result<Response> {
         let nonce = self.nonce()?;
 
@@ -457,6 +461,109 @@ impl Exchange {
         let connection_id = action.connection_id(vault_address, nonce)?;
 
         let signature = self.sign(from, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
+    /// Create subaccount for the user
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to create the subaccount with
+    /// * `name` - The name of the subaccount
+    pub async fn create_subaccount(
+        &self,
+        wallet: Arc<LocalWallet>,
+        name: String,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::CreateSubAccount { name };
+
+        let vault_address = None;
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
+    /// Transfer funds between subaccounts
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the transfer with
+    /// * `from` - The subaccount to transfer from
+    pub async fn subaccount_transfer() -> Result<Response> {
+        todo!("Implement subaccount transfer")
+    }
+
+    /// Set referrer for the user
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the transfer with
+    /// * `code` - The referrer code
+    pub async fn set_referrer(&self, wallet: Arc<LocalWallet>, code: String) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::SetReferrer { code };
+
+        let vault_address = None;
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
+    /// Schedule a time in (UTC ms) to cancel all open orders
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the transaction with
+    /// * `time` - Optional time in milliseconds to cancel all open orders
+    ///
+    /// # Note
+    /// * If `time` is `None`, then unsets any cancel time in the future.
+    /// `time` must be atleast 5 seconds after the current time
+    /// * Once the time is reached, all open orders will be cancelled and trigger count will be incremented.
+    /// The max number of triggers is 10 per day. Trigger count resets at 00:00 UTC
+    pub async fn schedule_cancel(
+        &self,
+        wallet: Arc<LocalWallet>,
+        time: Option<u128>,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let time = time.unwrap_or_else(|| nonce + 5000);
+
+        let action = Action::ScheduleCancel { time };
+
+        let vault_address = None;
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
 
         let request = Request {
             action,
