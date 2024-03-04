@@ -480,7 +480,7 @@ pub mod info {
         #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderStatus {
-            pub order: Order,
+            pub order: Option<Order>,
             pub status: String,
         }
     }

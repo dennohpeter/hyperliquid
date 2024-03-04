@@ -53,6 +53,8 @@ async fn main() {
         Response::Err(error) => panic!("Failed to place order: {:?}", error),
     };
 
+    println!("Response: {:?}", response.data);
+
     let status = &response.data.unwrap().statuses[0];
 
     let oid = match status {
