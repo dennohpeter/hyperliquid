@@ -72,5 +72,5 @@ async fn main() {
         .await
         .expect("Failed to fetch order status");
 
-    println!("Order status: {:#?}", status);
+    println!("Order status: {:#?}", status.order);
 }
