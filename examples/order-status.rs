@@ -40,29 +40,30 @@ async fn main() {
         cloid: None,
     };
 
-    // let vault_address = None;
+    let vault_address = None;
 
-    // println!("Placing order...");
-    // let response = exchange
-    //     .place_order(wallet.clone(), vec![order], vault_address)
-    //     .await
-    //     .expect("Failed to place order");
+    println!("Placing order...");
+    let response = exchange
+        .place_order(wallet.clone(), vec![order], vault_address)
+        .await
+        .expect("Failed to place order");
 
-    // let response = match response {
-    //     Response::Ok(order) => order,
-    //     Response::Err(error) => panic!("Failed to place order: {:?}", error),
-    // };
+    let response = match response {
+        Response::Ok(order) => order,
+        Response::Err(error) => panic!("Failed to place order: {:?}", error),
+    };
 
-    // let status = &response.data.unwrap().statuses[0];
+    let status = &response.data.unwrap().statuses[0];
 
-    // let oid = match status {
-    //     Status::Filled(order) => order.oid,
-    //     Status::Resting(order) => order.oid,
-    //     _ => panic!("Order is not filled or resting"),
-    // };
+    let oid = match status {
+        Status::Filled(order) => order.oid,
+        Status::Resting(order) => order.oid,
+        _ => panic!("Order is not filled or resting"),
+    };
 
-    let oid = 6834210926;
     println!("-----------------");
+
+    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 
     println!("Fetching order {} status...", oid);
 
@@ -71,5 +72,5 @@ async fn main() {
         .await
         .expect("Failed to fetch order status");
 
-    println!("Order status: {:?}", status);
+    println!("Order status: {:#?}", status);
 }
