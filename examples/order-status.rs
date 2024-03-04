@@ -65,8 +65,6 @@ async fn main() {
 
     println!("-----------------");
 
-    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-
     println!("Fetching order {} status...", oid);
 
     let status = info
@@ -74,5 +72,5 @@ async fn main() {
         .await
         .expect("Failed to fetch order status");
 
-    println!("Order status: {:#?}", status.order);
+    println!("Order status: {:#?}", status);
 }
