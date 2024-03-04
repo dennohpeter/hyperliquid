@@ -221,7 +221,7 @@ impl Info {
     /// # Arguments
     /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
     /// * `oid` - The order id either u64 representing the order id or 16-byte hex string representing the client order id
-    pub async fn order_status(&self, user: Address, oid: Oid) -> Result<serde_json::Value> {
+    pub async fn order_status(&self, user: Address, oid: Oid) -> Result<OrderStatus> {
         self.client
             .post(&API::Info, &Request::OrderStatus { user, oid })
             .await

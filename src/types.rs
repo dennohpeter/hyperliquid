@@ -463,7 +463,7 @@ pub mod info {
             pub reduce_only: bool,
             pub side: String,
             pub sz: String,
-            pub tif: String,
+            pub tif: Option<String>,
             pub timestamp: i64,
             pub trigger_condition: String,
             pub trigger_px: String,
