@@ -452,7 +452,7 @@ pub mod info {
         #[serde(rename_all = "camelCase")]
         pub struct OrderInfo {
             pub children: Vec<Option<serde_json::Value>>,
-            pub cloid: String,
+            pub cloid: Option<String>,
             pub coin: String,
             pub is_position_tpsl: bool,
             pub is_trigger: bool,
