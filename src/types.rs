@@ -256,6 +256,13 @@ pub mod info {
         }
 
         #[derive(Deserialize, Debug)]
+        #[serde(untagged)]
+        pub enum ImpactPxs {
+            String(String),
+            StringArray(Vec<String>),
+        }
+
+        #[derive(Deserialize, Debug)]
         #[serde(rename_all = "camelCase")]
         pub struct Ctx {
             pub funding: String,
@@ -266,7 +273,7 @@ pub mod info {
             pub oracle_px: String,
             pub mark_px: String,
             pub mid_px: String,
-            pub impact_pxs: Vec<String>,
+            pub impact_pxs: ImpactPxs,
         }
 
         #[derive(Deserialize, Debug)]
