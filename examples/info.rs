@@ -54,6 +54,7 @@ async fn main() {
     recent_trades(&info).await;
     candle_snapshot(&info).await;
     order_status(&info, &exchange, wallet).await;
+    sub_accounts(&info, user).await;
 }
 
 async fn metadata(info: &Info) {
@@ -195,4 +196,9 @@ async fn order_status(info: &Info, exchange: &Exchange, wallet: Arc<LocalWallet>
         cloid.simple(),
         order_status
     );
+}
+
+async fn sub_accounts(info: &Info, user: Address) {
+    let sub_accounts = info.sub_accounts(user).await.unwrap();
+    println!("Sub accounts for {user} \n{:?}{SEP}", sub_accounts);
 }

@@ -234,13 +234,17 @@ pub mod info {
                 user: Address,
                 oid: Oid,
             },
+            SubAccounts {
+                user: Address,
+            },
         }
     }
 
     pub mod response {
-        use serde::Deserialize;
+        use ethers::types::Address;
+        use serde::{Deserialize, Serialize};
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Asset {
             pub name: String,
@@ -249,20 +253,20 @@ pub mod info {
             pub only_isolated: bool,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Universe {
             pub universe: Vec<Asset>,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(untagged)]
         pub enum ImpactPxs {
             String(String),
             StringArray(Vec<String>),
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Ctx {
             pub funding: String,
@@ -276,21 +280,21 @@ pub mod info {
             pub impact_pxs: ImpactPxs,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(untagged)]
         pub enum AssetContext {
             Meta(Universe),
             Ctx(Vec<Ctx>),
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Leverage {
             #[serde(rename = "type")]
             pub type_: String,
             pub value: u32,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
 
         pub struct Position {
@@ -305,7 +309,7 @@ pub mod info {
             pub unrealized_pnl: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct AssetPosition {
             pub position: Position,
@@ -313,7 +317,7 @@ pub mod info {
             pub type_: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct MarginSummary {
             pub account_value: String,
@@ -322,24 +326,25 @@ pub mod info {
             pub total_raw_usd: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct UserState {
             pub asset_positions: Vec<AssetPosition>,
             pub margin_summary: MarginSummary,
             pub cross_margin_summary: MarginSummary,
             pub withdrawable: String,
+            pub time: u64,
             pub cross_maintenance_margin_used: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "UPPERCASE")]
         pub enum Side {
             B,
             A,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct OpenOrder {
             pub coin: String,
@@ -350,7 +355,7 @@ pub mod info {
             pub timestamp: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct FrontendOpenOrders {
             pub coin: String,
@@ -368,7 +373,7 @@ pub mod info {
             pub trigger_px: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct UserFill {
             pub coin: String,
@@ -385,7 +390,7 @@ pub mod info {
             pub fee: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Delta {
             pub coin: String,
@@ -396,7 +401,7 @@ pub mod info {
             pub usdc: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct UserFunding {
             pub delta: Delta,
@@ -404,7 +409,7 @@ pub mod info {
             pub time: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct FundingHistory {
             pub coin: String,
@@ -413,7 +418,7 @@ pub mod info {
             pub time: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Level {
             pub px: String,
@@ -421,14 +426,14 @@ pub mod info {
             pub n: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct L2Book {
             pub coin: String,
             pub levels: Vec<Vec<Level>>,
             pub time: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct RecentTrades {
             pub coin: String,
@@ -439,7 +444,7 @@ pub mod info {
             pub time: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct CandleSnapshot {
             #[serde(rename = "T")]
@@ -455,7 +460,7 @@ pub mod info {
             pub v: String,
         }
 
-        #[derive(Debug, Deserialize)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderInfo {
             pub children: Vec<Option<serde_json::Value>>,
@@ -476,7 +481,7 @@ pub mod info {
             pub trigger_px: String,
         }
 
-        #[derive(Debug, Deserialize)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Order {
             pub order: OrderInfo,
@@ -484,11 +489,20 @@ pub mod info {
             pub status_timestamp: i64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct OrderStatus {
             pub order: Option<Order>,
             pub status: String,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct SubAccount {
+            pub clearinghouse_state: UserState,
+            pub master: Address,
+            pub name: String,
+            pub sub_account_user: Address,
         }
     }
 }
@@ -724,14 +738,14 @@ pub mod exchange {
     }
 
     pub mod response {
-        use serde::Deserialize;
+        use serde::{Deserialize, Serialize};
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Resting {
             pub oid: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Filled {
             pub oid: u64,
@@ -739,7 +753,7 @@ pub mod exchange {
             pub avg_px: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub enum Status {
             Resting(Resting),
@@ -750,19 +764,19 @@ pub mod exchange {
             WaitingForTrigger,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Statuses {
             pub statuses: Vec<Status>,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Data {
             #[serde(rename = "type")]
             pub type_: String,
             pub data: Option<Statuses>,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase", tag = "status", content = "response")]
         pub enum Response {
             Ok(Data),
@@ -814,29 +828,29 @@ pub mod websocket {
         use std::collections::HashMap;
 
         use ethers::types::{Address, TxHash};
-        use serde::Deserialize;
+        use serde::{Deserialize, Serialize};
         use serde_json::Value;
 
         use crate::types::info::response::{CandleSnapshot, Ctx, Universe, UserFill, UserState};
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct AllMids {
             pub mids: HashMap<String, String>,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Notification {
             pub notification: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct LedgerUpdate {
             pub hash: TxHash,
             pub delta: Value,
             pub time: u128,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct WebData {
             pub user_state: UserState,
@@ -857,7 +871,7 @@ pub mod websocket {
             pub user: Address,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct WsTrade {
             pub coin: String,
             pub side: String,
@@ -867,21 +881,21 @@ pub mod websocket {
             pub time: u128,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct WsLevel {
             pub px: String,
             pub sz: String,
             pub n: u64,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct WsBook {
             pub coin: String,
             pub levels: Vec<Vec<WsLevel>>,
             pub time: u128,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct WsBasicOrder {
             pub coin: String,
@@ -893,7 +907,7 @@ pub mod websocket {
             pub orig_sz: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct WsOrder {
             pub order: WsBasicOrder,
@@ -901,7 +915,7 @@ pub mod websocket {
             pub status_timestamp: u128,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct WsUserFunding {
             pub time: u128,
@@ -911,7 +925,7 @@ pub mod websocket {
             pub funding_rate: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "snake_case")]
         pub struct WsLiquidation {
             pub liq: u64,
@@ -921,14 +935,14 @@ pub mod websocket {
             pub liquidated_account_value: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct WsNonUserCancel {
             pub oid: u64,
             pub coin: String,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase", untagged)]
         pub enum WsUserEvent {
             WsFill(Vec<UserFill>),
@@ -937,13 +951,13 @@ pub mod websocket {
             WsNonUserCancel(Vec<WsNonUserCancel>),
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Channel {
             pub method: String,
             pub subscription: Value,
         }
 
-        #[derive(Deserialize, Debug)]
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase", tag = "channel", content = "data")]
         pub enum Response {
             AllMids(AllMids),

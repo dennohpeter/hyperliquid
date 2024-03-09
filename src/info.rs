@@ -10,7 +10,8 @@ use crate::{
             request::{CandleSnapshotRequest, Request},
             response::{
                 AssetContext, CandleSnapshot, FrontendOpenOrders, FundingHistory, L2Book,
-                OpenOrder, OrderStatus, RecentTrades, Universe, UserFill, UserFunding, UserState,
+                OpenOrder, OrderStatus, RecentTrades, SubAccount, Universe, UserFill, UserFunding,
+                UserState,
             },
         },
         Chain, Oid, API,
@@ -224,6 +225,16 @@ impl Info {
     pub async fn order_status(&self, user: Address, oid: Oid) -> Result<OrderStatus> {
         self.client
             .post(&API::Info, &Request::OrderStatus { user, oid })
+            .await
+    }
+
+    /// Query user sub-accounts
+    ///
+    /// # Arguments
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
+    pub async fn sub_accounts(&self, user: Address) -> Result<Option<Vec<SubAccount>>> {
+        self.client
+            .post(&API::Info, &Request::SubAccounts { user })
             .await
     }
 }
