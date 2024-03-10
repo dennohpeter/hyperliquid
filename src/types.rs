@@ -615,6 +615,26 @@ pub mod exchange {
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
+        pub struct TwapRequest {
+            #[serde(rename = "a", alias = "asset")]
+            pub asset: u32,
+            #[serde(rename = "b", alias = "isBuy")]
+            pub is_buy: bool,
+            #[serde(rename = "s", alias = "sz")]
+            pub sz: String,
+            #[serde(rename = "r", alias = "reduceOnly", default)]
+            pub reduce_only: bool,
+            /// Running Time (5m - 24h)
+            #[serde(rename = "m", alias = "minutes")]
+            pub minutes: u64,
+            /// if set to true, the size of each sub-trade will be automatically adjusted
+            /// within a certain range, typically upto to 20% higher or lower than the original trade size
+            #[serde(rename = "t", alias = "randomize")]
+            pub randomize: bool,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
         pub struct TransferRequest {
             pub destination: String,
             pub amount: String,
@@ -655,7 +675,9 @@ pub mod exchange {
             BatchModify {
                 modifies: Vec<ModifyRequest>,
             },
-
+            TwapOrder {
+                twap: TwapRequest,
+            },
             UsdTransfer {
                 chain: Chain,
                 payload: TransferRequest,
@@ -757,6 +779,12 @@ pub mod exchange {
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
+        pub struct TwapId {
+            pub twap_id: u64,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
         pub enum Status {
             Resting(Resting),
             Filled(Filled),
@@ -764,18 +792,21 @@ pub mod exchange {
             Success,
             WaitingForFill,
             WaitingForTrigger,
+            Running(TwapId),
         }
 
         #[derive(Debug, Serialize, Deserialize)]
-        pub struct Statuses {
-            pub statuses: Vec<Status>,
+        #[serde(rename_all = "camelCase")]
+        pub enum StatusType {
+            Statuses(Vec<Status>),
+            Status(Status),
         }
 
         #[derive(Debug, Serialize, Deserialize)]
         pub struct Data {
             #[serde(rename = "type")]
             pub type_: String,
-            pub data: Option<Statuses>,
+            pub data: Option<StatusType>,
         }
 
         #[derive(Debug, Serialize, Deserialize)]

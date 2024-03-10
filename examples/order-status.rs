@@ -5,7 +5,7 @@ use hyperliquid::{
     types::{
         exchange::{
             request::{Limit, OrderRequest, OrderType, Tif},
-            response::{Response, Status},
+            response::{Response, Status, StatusType},
         },
         Chain, Oid,
     },
@@ -55,7 +55,14 @@ async fn main() {
 
     println!("Response: {:?}", response.data);
 
-    let status = &response.data.unwrap().statuses[0];
+    let status_type = &response.data.unwrap();
+
+    let status = match status_type {
+        StatusType::Statuses(statuses) => &statuses[0],
+        _ => {
+            panic!("Failed to place order: {:?}", status_type);
+        }
+    };
 
     let oid = match status {
         Status::Filled(order) => order.oid,
