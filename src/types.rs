@@ -527,6 +527,7 @@ pub mod exchange {
             Gtc,
             Ioc,
             Alo,
+            FrontendMarket,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -585,6 +586,7 @@ pub mod exchange {
         #[serde(rename_all = "camelCase")]
         pub enum Grouping {
             Na,
+            NormalTpsl,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
