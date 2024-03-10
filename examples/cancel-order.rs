@@ -54,7 +54,9 @@ async fn main() {
     let oid = match status {
         Status::Filled(order) => order.oid,
         Status::Resting(order) => order.oid,
-        _ => panic!("Order is not filled or resting"),
+        _ => {
+            panic!("Order is not filled or resting, status: {:?}", status);
+        }
     };
 
     println!("Order placed: {:?}", oid);

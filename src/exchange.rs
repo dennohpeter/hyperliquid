@@ -287,7 +287,7 @@ impl Exchange {
 
         let signature = {
             let destination = to_checksum(&destination, None);
-            let time = nonce as u64;
+            let time = nonce;
             let amount = amount.clone();
 
             match self.chain {
@@ -350,7 +350,7 @@ impl Exchange {
 
         let signature = {
             let destination = to_checksum(&destination, None);
-            let time = nonce as u64;
+            let time = nonce;
             let usd = usd.clone();
 
             match self.chain {
@@ -551,7 +551,7 @@ impl Exchange {
     pub async fn schedule_cancel(
         &self,
         wallet: Arc<LocalWallet>,
-        time: Option<u128>,
+        time: Option<u64>,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
@@ -614,9 +614,9 @@ impl Exchange {
     }
 
     /// get the next nonce to use
-    fn nonce(&self) -> Result<u128> {
+    fn nonce(&self) -> Result<u64> {
         let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?;
 
-        Ok(now.as_millis())
+        Ok(now.as_millis() as u64)
     }
 }

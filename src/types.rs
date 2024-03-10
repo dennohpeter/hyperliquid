@@ -616,7 +616,7 @@ pub mod exchange {
         pub struct TransferRequest {
             pub destination: String,
             pub amount: String,
-            pub time: u128,
+            pub time: u64,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -624,7 +624,7 @@ pub mod exchange {
         pub struct WithdrawalRequest {
             pub destination: String,
             pub usd: String,
-            pub time: u128,
+            pub time: u64,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -660,7 +660,7 @@ pub mod exchange {
             },
             Withdraw {
                 usd: String,
-                nonce: u128,
+                nonce: u64,
             },
             Withdraw2 {
                 chain: Chain,
@@ -699,7 +699,7 @@ pub mod exchange {
                 code: String,
             },
             ScheduleCancel {
-                time: u128,
+                time: u64,
             },
         }
 
@@ -708,12 +708,12 @@ pub mod exchange {
             pub fn connection_id(
                 &self,
                 vault_address: Option<Address>,
-                nonce: u128,
+                nonce: u64,
             ) -> Result<H256> {
                 let mut encoded = rmp_serde::to_vec_named(self)
                     .map_err(|e| Error::RmpSerdeError(e.to_string()))?;
 
-                encoded.extend((nonce as u64).to_be_bytes());
+                encoded.extend((nonce).to_be_bytes());
 
                 if let Some(address) = vault_address {
                     encoded.push(1);
@@ -730,7 +730,7 @@ pub mod exchange {
         #[serde(rename_all = "camelCase")]
         pub struct Request {
             pub action: Action,
-            pub nonce: u128,
+            pub nonce: u64,
             pub signature: Signature,
             #[serde(skip_serializing_if = "Option::is_none")]
             pub vault_address: Option<Address>,
@@ -847,7 +847,7 @@ pub mod websocket {
         pub struct LedgerUpdate {
             pub hash: TxHash,
             pub delta: Value,
-            pub time: u128,
+            pub time: u64,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -866,7 +866,7 @@ pub mod websocket {
             pub meta: Universe,
             pub asset_contexts: Option<Vec<Ctx>>,
             pub order_history: Vec<Value>,
-            pub server_time: u128,
+            pub server_time: u64,
             pub is_vault: bool,
             pub user: Address,
         }
@@ -878,7 +878,7 @@ pub mod websocket {
             pub px: String,
             pub sz: String,
             pub hash: TxHash,
-            pub time: u128,
+            pub time: u64,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -892,7 +892,7 @@ pub mod websocket {
         pub struct WsBook {
             pub coin: String,
             pub levels: Vec<Vec<WsLevel>>,
-            pub time: u128,
+            pub time: u64,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -903,7 +903,7 @@ pub mod websocket {
             pub limit_px: String,
             pub sz: String,
             pub oid: u64,
-            pub timestamp: u128,
+            pub timestamp: u64,
             pub orig_sz: String,
         }
 
@@ -912,13 +912,13 @@ pub mod websocket {
         pub struct WsOrder {
             pub order: WsBasicOrder,
             pub status: String,
-            pub status_timestamp: u128,
+            pub status_timestamp: u64,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct WsUserFunding {
-            pub time: u128,
+            pub time: u64,
             pub coin: String,
             pub usdc: String,
             pub szi: String,
