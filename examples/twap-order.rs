@@ -25,7 +25,7 @@ async fn main() {
         asset,
         is_buy: true,
         reduce_only: false,
-        minutes: 10,
+        duration: 10,
         sz: parse_size(13.85, sz_decimals),
         randomize: true,
     };

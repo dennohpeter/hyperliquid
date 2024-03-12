@@ -261,7 +261,7 @@ pub mod info {
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(untagged)]
-        pub enum ImpactPxs {
+        pub enum ImpactPx {
             String(String),
             StringArray(Vec<String>),
         }
@@ -273,11 +273,11 @@ pub mod info {
             pub open_interest: String,
             pub prev_day_px: String,
             pub day_ntl_vlm: String,
-            pub premium: String,
+            pub premium: Option<String>,
             pub oracle_px: String,
             pub mark_px: String,
-            pub mid_px: String,
-            pub impact_pxs: ImpactPxs,
+            pub mid_px: Option<String>,
+            pub impact_pxs: Option<ImpactPx>,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -625,8 +625,8 @@ pub mod exchange {
             #[serde(rename = "r", alias = "reduceOnly", default)]
             pub reduce_only: bool,
             /// Running Time (5m - 24h)
-            #[serde(rename = "m", alias = "minutes")]
-            pub minutes: u64,
+            #[serde(rename = "m", alias = "duration")]
+            pub duration: u64,
             /// if set to true, the size of each sub-trade will be automatically adjusted
             /// within a certain range, typically upto to 20% higher or lower than the original trade size
             #[serde(rename = "t", alias = "randomize")]
