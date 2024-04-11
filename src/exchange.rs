@@ -507,7 +507,7 @@ impl Exchange {
     /// # Arguments
     /// * `wallet` - The wallet to create the subaccount with
     /// * `name` - The name of the subaccount
-    pub async fn create_subaccount(
+    pub async fn create_sub_account(
         &self,
         wallet: Arc<LocalWallet>,
         name: String,
@@ -532,13 +532,75 @@ impl Exchange {
         self.client.post(&API::Exchange, &request).await
     }
 
+    /// Rename subaccount
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the rename with
+    /// * `name` - The new name of the subaccount
+    /// * `sub_account_user` - The address of the subaccount to rename
+    pub async fn sub_account_modify(
+        &self,
+        wallet: Arc<LocalWallet>,
+        name: String,
+        sub_account_user: Address,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::SubAccountModify {
+            name,
+            sub_account_user,
+        };
+
+        let vault_address = None;
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
     /// Transfer funds between subaccounts
     ///
     /// # Arguments
     /// * `wallet` - The wallet to sign the transfer with
     /// * `from` - The subaccount to transfer from
-    pub async fn subaccount_transfer() -> Result<Response> {
-        todo!("Implement subaccount transfer")
+    pub async fn sub_account_transfer(
+        &self,
+        wallet: Arc<LocalWallet>,
+        is_deposit: bool,
+        sub_account_user: Address,
+        usd: u64,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::SubAccountTransfer {
+            is_deposit,
+            sub_account_user,
+            usd,
+        };
+
+        let vault_address = None;
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
     }
 
     /// Set referrer for the user

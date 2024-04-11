@@ -714,10 +714,15 @@ pub mod exchange {
                 name: String,
             },
             #[serde(rename_all = "camelCase")]
+            SubAccountModify {
+                sub_account_user: Address,
+                name: String,
+            },
+            #[serde(rename_all = "camelCase")]
             SubAccountTransfer {
-                sub_account_user: String,
+                sub_account_user: Address,
                 is_deposit: bool,
-                usd: String,
+                usd: u64,
             },
             SetReferrer {
                 code: String,
@@ -762,6 +767,7 @@ pub mod exchange {
     }
 
     pub mod response {
+        use ethers::types::Address;
         use serde::{Deserialize, Serialize};
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -800,6 +806,8 @@ pub mod exchange {
         pub enum StatusType {
             Statuses(Vec<Status>),
             Status(Status),
+            #[serde(untagged)]
+            Address(Address),
         }
 
         #[derive(Debug, Serialize, Deserialize)]
