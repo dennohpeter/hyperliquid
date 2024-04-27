@@ -288,6 +288,14 @@ pub mod info {
         }
 
         #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct CumFunding {
+            pub all_time: String,
+            pub since_change: String,
+            pub since_open: String,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
         pub struct Leverage {
             #[serde(rename = "type")]
             pub type_: String,
@@ -299,10 +307,12 @@ pub mod info {
 
         pub struct Position {
             pub coin: String,
+            pub cum_funding: CumFunding,
             pub entry_px: Option<String>,
             pub leverage: Leverage,
             pub liquidation_px: Option<String>,
             pub margin_used: String,
+            pub max_leverage: u32,
             pub position_value: String,
             pub return_on_equity: String,
             pub szi: String,

@@ -32,7 +32,7 @@ async fn main() {
     println!("--\nUpdating isolated margin for ETH to {margin}% ...");
 
     let res = exchange
-        .update_isolated_margin(wallet.clone(), margin, asset)
+        .update_isolated_margin(wallet.clone(), asset, true, margin)
         .await
         .unwrap();
 

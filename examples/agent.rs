@@ -30,7 +30,7 @@ async fn main() {
     // Create a new wallet with the agent. This agent can't transfer or withdraw funds
     // but can place orders.
 
-    let agent = LocalWallet::new(&mut thread_rng());
+    let agent = Arc::new(LocalWallet::new(&mut thread_rng()));
 
     let agent_address = agent.address();
 
@@ -59,7 +59,7 @@ async fn main() {
     println!("Placing order with agent...");
 
     let response = exchange
-        .place_order(wallet.clone(), vec![order], vault_address)
+        .place_order(agent.clone(), vec![order], vault_address)
         .await
         .expect("Failed to place order");
 

@@ -238,20 +238,22 @@ impl Exchange {
     ///
     /// # Arguments
     /// * `wallet` - The wallet to sign the order with
-    /// * `margin` - The new margin to set
     /// * `asset` - The asset to set the margin for
+    /// * `is_buy` - true if adding margin, false if removing margin
+    /// * `ntli` - The new margin to set
     pub async fn update_isolated_margin(
         &self,
         wallet: Arc<LocalWallet>,
-        margin: i64,
         asset: u32,
+        is_buy: bool,
+        ntli: i64,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
         let action = Action::UpdateIsolatedMargin {
             asset,
-            is_buy: true,
-            ntli: margin,
+            is_buy,
+            ntli,
         };
 
         let vault_address = None;
