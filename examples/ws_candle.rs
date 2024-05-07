@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
 
     ws.subscribe(&[candle]).await?;
 
-    let handler = |event: Response| {
+    let handler = |event: Response| async move {
         println!("Received Candle: \n--\n{:?}", event);
 
         Ok(())

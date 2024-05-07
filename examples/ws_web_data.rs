@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
 
     ws.subscribe(&[web_data]).await?;
 
-    let handler = |event: Response| {
+    let handler = |event: Response| async move {
         println!("Received Web Data: \n--\n{:?}", event);
 
         Ok(())

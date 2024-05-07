@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
 
     ws.subscribe(&[order_updates]).await?;
 
-    let handler = |event: Response| {
+    let handler = |event: Response| async move {
         println!("Received Order Updates: \n--\n{:?}", event);
 
         Ok(())

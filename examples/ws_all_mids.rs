@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     ws.subscribe(&[subscription]).await?;
 
-    let handler = |event: Response| {
+    let handler = |event: Response| async move {
         println!("Received All Mids: \n--\n{:?}", event);
 
         Ok(())

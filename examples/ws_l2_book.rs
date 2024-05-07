@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     ws.subscribe(&[books]).await?;
 
-    let handler = |event: Response| {
+    let handler = |event: Response| async move {
         println!("Received L2 Books: \n--\n{:?}", event);
 
         Ok(())

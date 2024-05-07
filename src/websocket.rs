@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use futures_util::{SinkExt, StreamExt};
+use futures_util::{Future, SinkExt, StreamExt};
 use tokio::net::TcpStream;
 use tokio_tungstenite::{connect_async, tungstenite::Message, MaybeTlsStream, WebSocketStream};
 
@@ -81,16 +81,17 @@ impl Websocket {
         self.send(&channels, false).await
     }
 
-    pub async fn next<Callback>(&mut self, handler: Callback) -> Result<Option<bool>>
+    pub async fn next<F, Fut>(&mut self, handler: F) -> Result<Option<bool>>
     where
-        Callback: Fn(Response) -> Result<()>,
+        F: Fn(Response) -> Fut,
+        Fut: Future<Output = Result<()>>,
     {
         if let Some(stream) = &mut self.stream {
             while let Some(message) = stream.next().await {
                 if let Message::Text(text) = message? {
                     let response = serde_json::from_str(&text)?;
 
-                    (handler)(response)?;
+                    (handler)(response).await?;
                 }
             }
         }

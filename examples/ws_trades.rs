@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
 
     ws.subscribe(&[trades]).await?;
 
-    let handler = |event: Response| {
+    let handler = |event: Response| async move {
         println!("Received Trades: \n--\n{:?}", event);
 
         Ok(())
