@@ -87,12 +87,7 @@ impl Websocket {
     {
         if let Some(stream) = &mut self.stream {
             while let Some(message) = stream.next().await {
-                let message = message?;
-
-                if let Message::Text(text) = message {
-                    if !text.starts_with('{') {
-                        continue;
-                    }
+                if let Message::Text(text) = message? {
                     let response = serde_json::from_str(&text)?;
 
                     (handler)(response)?;

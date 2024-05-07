@@ -41,6 +41,13 @@ pub enum Oid {
     #[serde(serialize_with = "as_hex")]
     Cloid(Cloid),
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+pub enum Side {
+    B,
+    A,
+}
 pub mod agent {
     pub mod mainnet {
         use ethers::{
@@ -244,6 +251,8 @@ pub mod info {
         use ethers::types::Address;
         use serde::{Deserialize, Serialize};
 
+        use crate::types::Side;
+
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct Asset {
@@ -345,13 +354,6 @@ pub mod info {
             pub withdrawable: String,
             pub time: u64,
             pub cross_maintenance_margin_used: String,
-        }
-
-        #[derive(Debug, Serialize, Deserialize)]
-        #[serde(rename_all = "UPPERCASE")]
-        pub enum Side {
-            B,
-            A,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -882,7 +884,10 @@ pub mod websocket {
         use serde::{Deserialize, Serialize};
         use serde_json::Value;
 
-        use crate::types::info::response::{CandleSnapshot, Ctx, Universe, UserFill, UserState};
+        use crate::types::{
+            info::response::{CandleSnapshot, Ctx, Universe, UserFill, UserState},
+            Side,
+        };
 
         #[derive(Debug, Serialize, Deserialize)]
         pub struct AllMids {
@@ -950,12 +955,14 @@ pub mod websocket {
         #[serde(rename_all = "camelCase")]
         pub struct WsBasicOrder {
             pub coin: String,
-            pub side: String,
+            pub side: Side,
             pub limit_px: String,
             pub sz: String,
             pub oid: u64,
             pub timestamp: u64,
             pub orig_sz: String,
+            #[serde(default)]
+            pub reduce_only: bool,
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -1017,7 +1024,7 @@ pub mod websocket {
             Candle(CandleSnapshot),
             L2Book(WsBook),
             Trades(Vec<WsTrade>),
-            OrderUpdates(WsOrder),
+            OrderUpdates(Vec<WsOrder>),
             User(WsUserEvent),
             SubscriptionResponse(Channel),
         }
