@@ -10,8 +10,8 @@ use crate::{
             request::{CandleSnapshotRequest, Request},
             response::{
                 AssetContext, CandleSnapshot, FrontendOpenOrders, FundingHistory, L2Book,
-                OpenOrder, OrderStatus, RecentTrades, SubAccount, Universe, UserFill, UserFunding,
-                UserState,
+                OpenOrder, OrderStatus, RecentTrades, SpotMeta, SpotMetaAndAssetCtxs, SubAccount,
+                Universe, UserFill, UserFunding, UserSpotState, UserState,
             },
         },
         Chain, Oid, API,
@@ -235,6 +235,30 @@ impl Info {
     pub async fn sub_accounts(&self, user: Address) -> Result<Option<Vec<SubAccount>>> {
         self.client
             .post(&API::Info, &Request::SubAccounts { user })
+            .await
+    }
+}
+
+impl Info {
+    /// Retrieve spot metadata
+    pub async fn spot_meta(&self) -> Result<SpotMeta> {
+        self.client.post(&API::Info, &Request::SpotMeta).await
+    }
+
+    /// Retrieve spot asset contexts
+    pub async fn spot_meta_and_asset_ctxs(&self) -> Result<Vec<SpotMetaAndAssetCtxs>> {
+        self.client
+            .post(&API::Info, &Request::SpotMetaAndAssetCtxs)
+            .await
+    }
+
+    /// Retrieve a user's token balances
+    ///
+    /// # Arguments
+    /// * `user` - The user's address in 42-character hexadecimal format; e.g. `0x0000000000000000000000000000000000000000`
+    pub async fn spot_clearinghouse_state(&self, user: Address) -> Result<UserSpotState> {
+        self.client
+            .post(&API::Info, &Request::SpotClearinghouseState { user })
             .await
     }
 }

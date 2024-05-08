@@ -17,7 +17,7 @@ use uuid::Uuid;
 const SEP: &str = "\n---";
 
 #[tokio::main]
-async fn main() {
+pub async fn main() {
     // Key was randomly generated for testing and shouldn't be used with any real funds
     let wallet: Arc<LocalWallet> = Arc::new(
         "e908f86dbb4d55ac876378565aafeabc187f6690f046459397b17d9b9a19688e"
@@ -37,7 +37,7 @@ async fn main() {
 
     let now = now.as_millis() as u64;
 
-    println!("Info API Examples");
+    println!("Info Perps API Examples");
 
     metadata(&info).await;
     mids(&info).await;

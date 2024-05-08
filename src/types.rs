@@ -244,6 +244,14 @@ pub mod info {
             SubAccounts {
                 user: Address,
             },
+
+            SpotMeta,
+
+            SpotMetaAndAssetCtxs,
+
+            SpotClearinghouseState {
+                user: Address,
+            },
         }
     }
 
@@ -257,8 +265,8 @@ pub mod info {
         #[serde(rename_all = "camelCase")]
         pub struct Asset {
             pub name: String,
-            pub sz_decimals: u32,
-            pub max_leverage: u32,
+            pub sz_decimals: u64,
+            pub max_leverage: u64,
             pub only_isolated: bool,
         }
 
@@ -515,6 +523,64 @@ pub mod info {
             pub master: Address,
             pub name: String,
             pub sub_account_user: Address,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct SpotAsset {
+            pub index: u64,
+            pub is_canonical: bool,
+            pub name: String,
+            pub sz_decimals: u64,
+            pub token_id: String,
+            pub wei_decimals: u64,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct SpotUniverse {
+            pub index: u64,
+            pub is_canonical: bool,
+            pub name: String,
+            pub tokens: Vec<u64>,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct SpotMeta {
+            pub tokens: Vec<SpotAsset>,
+            pub universe: Vec<SpotUniverse>,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct SpotCtx {
+            pub circulating_supply: String,
+            pub coin: String,
+            pub day_ntl_vlm: String,
+            pub mark_px: String,
+            pub mid_px: Option<String>,
+            pub prev_day_px: String,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(untagged)]
+        pub enum SpotMetaAndAssetCtxs {
+            Meta(SpotMeta),
+            Ctx(Vec<SpotCtx>),
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct Balance {
+            pub coin: String,
+            pub hold: String,
+            pub total: String,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct UserSpotState {
+            pub balances: Vec<Balance>,
         }
     }
 }
