@@ -35,10 +35,7 @@ async fn spot_meta(info: &Info) {
 
 async fn spot_meta_and_asset_ctxs(info: &Info) {
     let spot_asset_ctxs = info.spot_meta_and_asset_ctxs().await.unwrap();
-    println!(
-        "Spot Asset Contexts \n{:?}{SEP}",
-        serde_json::to_string(&spot_asset_ctxs)
-    );
+    println!("Spot Asset Contexts \n{:?}{SEP}", spot_asset_ctxs);
 }
 
 async fn spot_clearinghouse_state(info: &Info, user: Address) {
