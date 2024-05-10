@@ -47,6 +47,7 @@ pub fn parse_price(px: f64) -> String {
 /// assert_eq!(parse_size(1.001, 3), "1.001");
 /// assert_eq!(parse_size(1.001, 2), "1");
 /// assert_eq!(parse_size(1.0001, 3), "1");
+/// assert_eq!(parse_size(1000.0, 0), "1000");
 /// ```
 
 pub fn parse_size(sz: f64, sz_decimals: u32) -> String {
@@ -59,7 +60,7 @@ pub fn parse_size(sz: f64, sz_decimals: u32) -> String {
 
 fn remove_trailing_zeros(s: &str) -> String {
     let mut s = s.to_string();
-    while s.ends_with('0') {
+    while s.ends_with('0') && s.contains(".") {
         s.pop();
     }
     if s.ends_with('.') {
