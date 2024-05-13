@@ -68,6 +68,43 @@ impl Exchange {
         self.client.post(&API::Exchange, &request).await
     }
 
+    /// Place a normal order with tpsl order
+    ///
+    /// # Arguments
+    /// * `wallet` - The wallet to sign the order with
+    /// * `orders` - The orders to place
+    /// * `vault_address` - If trading on behalf of a vault, its onchain address in 42-character hexadecimal format
+    /// e.g. `0x0000000000000000000000000000000000000000`
+    ///
+    /// # Note
+    /// * `cloid` in argument `order` is an optional 128 bit hex string, e.g. `0x1234567890abcdef1234567890abcdef`
+    pub async fn normal_tpsl(
+        &self,
+        wallet: Arc<LocalWallet>,
+        orders: Vec<OrderRequest>,
+        vault_address: Option<Address>,
+    ) -> Result<Response> {
+        let nonce = self.nonce()?;
+
+        let action = Action::Order {
+            grouping: Grouping::NormalTpsl,
+            orders,
+        };
+
+        let connection_id = action.connection_id(vault_address, nonce)?;
+
+        let signature = self.sign(wallet, connection_id).await?;
+
+        let request = Request {
+            action,
+            nonce,
+            signature,
+            vault_address,
+        };
+
+        self.client.post(&API::Exchange, &request).await
+    }
+
     /// Cancel an order
     ///
     /// # Arguments
