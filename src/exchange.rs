@@ -14,11 +14,11 @@ use crate::{
         exchange::{
             request::{
                 Action, ApproveAgent, CancelByCloidRequest, CancelRequest, Grouping, ModifyRequest,
-                OrderRequest, Request, TwapRequest, UsdSend, WithdrawalRequest,
+                OrderRequest, Request, TwapRequest, UsdSend, Withdraw3,
             },
             response::Response,
         },
-        usd_transfer, Chain, HyperliquidChain, API,
+        Chain, HyperliquidChain, API,
     },
     Error,
 };
@@ -386,55 +386,32 @@ impl Exchange {
     /// # Arguments
     /// * `wallet` - The wallet to sign the withdrawal with
     /// * `destination` - The address to send the usd to
-    /// * `usd` - The amount of usd to send
+    /// * `amount` - The amount of usd to send
     pub async fn withdraw_from_bridge(
         &self,
         wallet: Arc<LocalWallet>,
         destination: Address,
-        usd: String,
+        amount: String,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let signature = {
-            let destination = to_checksum(&destination, None);
-            let time = nonce;
-            let usd = usd.clone();
-
-            match self.chain {
-                Chain::Arbitrum => {
-                    wallet
-                        .sign_typed_data(&usd_transfer::mainnet::WithdrawFromBridge2SignPayload {
-                            destination,
-                            usd,
-                            time,
-                        })
-                        .await?
-                }
-                Chain::ArbitrumTestnet => {
-                    wallet
-                        .sign_typed_data(&usd_transfer::testnet::WithdrawFromBridge2SignPayload {
-                            destination,
-                            usd,
-                            time,
-                        })
-                        .await?
-                }
-                _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
-            }
+        let hyperliquid_chain = match self.chain {
+            Chain::Arbitrum => HyperliquidChain::Mainnet,
+            Chain::ArbitrumTestnet => HyperliquidChain::Testnet,
+            _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
         };
 
-        let payload = WithdrawalRequest {
-            usd,
+        let payload = Withdraw3 {
+            hyperliquid_chain,
+            signature_chain_id: 421614.into(),
+            amount,
             destination: to_checksum(&destination, None),
             time: nonce,
         };
-        let action = Action::Withdraw2 {
-            chain: match self.chain {
-                Chain::Arbitrum => Chain::Arbitrum,
-                _ => Chain::ArbitrumTestnet,
-            },
-            payload,
-        };
+
+        let signature = wallet.sign_typed_data(&payload).await?;
+
+        let action = Action::Withdraw3(payload);
 
         let request = Request {
             action,
@@ -483,33 +460,6 @@ impl Exchange {
             nonce,
             signature,
             vault_address: None,
-        };
-
-        self.client.post(&API::Exchange, &request).await
-    }
-
-    /// Initiate a withdrawal request
-    ///
-    /// # Arguments
-    /// * `from` - The wallet to sign the withdrawal with
-    /// * `usd` - The amount of usd to send
-    pub async fn withdraw(&self, from: Arc<LocalWallet>, usd: String) -> Result<Response> {
-        let nonce = self.nonce()?;
-
-        let action = Action::Withdraw { usd, nonce };
-
-        let vault_address = None;
-
-        let connection_id = action.connection_id(vault_address, nonce)?;
-
-        // FIX
-        let signature = self.sign_l1_action(from, connection_id).await?;
-
-        let request = Request {
-            action,
-            nonce,
-            signature,
-            vault_address,
         };
 
         self.client.post(&API::Exchange, &request).await
@@ -668,7 +618,6 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        // FIX
         let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {

@@ -85,42 +85,6 @@ pub mod agent {
     }
 }
 
-pub mod usd_transfer {
-    pub mod mainnet {
-        use ethers::contract::{Eip712, EthAbiType};
-
-        #[derive(Eip712, Clone, EthAbiType)]
-        #[eip712(
-            name = "Exchange",
-            version = "1",
-            chain_id = 42161,
-            verifying_contract = "0x0000000000000000000000000000000000000000"
-        )]
-        pub struct WithdrawFromBridge2SignPayload {
-            pub destination: String,
-            pub usd: String,
-            pub time: u64,
-        }
-    }
-
-    pub mod testnet {
-        use ethers::contract::{Eip712, EthAbiType};
-
-        #[derive(Eip712, Clone, EthAbiType)]
-        #[eip712(
-            name = "Exchange",
-            version = "1",
-            chain_id = 421614,
-            verifying_contract = "0x0000000000000000000000000000000000000000"
-        )]
-        pub struct WithdrawFromBridge2SignPayload {
-            pub destination: String,
-            pub usd: String,
-            pub time: u64,
-        }
-    }
-}
-
 pub mod info {
     pub mod request {
         use ethers::types::Address;
@@ -551,7 +515,7 @@ pub mod exchange {
         use serde::{Deserialize, Serialize};
 
         use crate::{
-            types::{Chain, Cloid, HyperliquidChain},
+            types::{Cloid, HyperliquidChain},
             utils::{as_hex, as_hex_option},
             Error, Result,
         };
@@ -670,10 +634,48 @@ pub mod exchange {
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
-        pub struct WithdrawalRequest {
+        pub struct Withdraw3 {
+            pub signature_chain_id: U256,
+            pub hyperliquid_chain: HyperliquidChain,
             pub destination: String,
-            pub usd: String,
+            pub amount: String,
             pub time: u64,
+        }
+
+        impl Eip712 for Withdraw3 {
+            type Error = Eip712Error;
+
+            fn domain(&self) -> std::result::Result<EIP712Domain, Self::Error> {
+                Ok(EIP712Domain {
+                    name: Some("HyperliquidSignTransaction".into()),
+                    version: Some("1".into()),
+                    chain_id: Some(self.signature_chain_id),
+                    verifying_contract: Some(Address::zero()),
+                    salt: None,
+                })
+            }
+
+            fn type_hash() -> std::result::Result<[u8; 32], Self::Error> {
+                Ok(make_type_hash(
+                    "HyperliquidTransaction:Withdraw".into(),
+                    &[
+                        ("hyperliquidChain".to_string(), ParamType::String),
+                        ("destination".to_string(), ParamType::String),
+                        ("amount".to_string(), ParamType::String),
+                        ("time".to_string(), ParamType::Uint(64)),
+                    ],
+                ))
+            }
+
+            fn struct_hash(&self) -> std::result::Result<[u8; 32], Self::Error> {
+                Ok(keccak256(encode(&[
+                    Token::Uint(Self::type_hash()?.into()),
+                    encode_eip712_type(self.hyperliquid_chain.to_string().into_token()),
+                    encode_eip712_type(self.destination.clone().into_token()),
+                    encode_eip712_type(self.amount.clone().into_token()),
+                    encode_eip712_type(self.time.into_token()),
+                ])))
+            }
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -800,14 +802,7 @@ pub mod exchange {
             },
             UsdSend(UsdSend),
 
-            Withdraw {
-                usd: String,
-                nonce: u64,
-            },
-            Withdraw2 {
-                chain: Chain,
-                payload: WithdrawalRequest,
-            },
+            Withdraw3(Withdraw3),
             #[serde(rename_all = "camelCase")]
             UpdateLeverage {
                 asset: u32,
