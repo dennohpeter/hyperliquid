@@ -1,25 +1,24 @@
 use std::{sync::Arc, time::SystemTime};
 
 use ethers::{
-    abi::AbiEncode,
     signers::{LocalWallet, Signer},
     types::{Address, Signature, H256},
-    utils::{keccak256, to_checksum},
+    utils::to_checksum,
 };
 
 use crate::{
     client::Client,
     error::Result,
     types::{
-        agent::{l1, mainnet, testnet},
+        agent::l1,
         exchange::{
             request::{
-                Action, Agent, CancelByCloidRequest, CancelRequest, Grouping, ModifyRequest,
+                Action, ApproveAgent, CancelByCloidRequest, CancelRequest, Grouping, ModifyRequest,
                 OrderRequest, Request, TransferRequest, TwapRequest, WithdrawalRequest,
             },
             response::Response,
         },
-        usd_transfer, Chain, API,
+        usd_transfer, Chain, HyperliquidChain, API,
     },
     Error,
 };
@@ -56,7 +55,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -93,7 +92,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -124,7 +123,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -157,7 +156,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -190,7 +189,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -221,7 +220,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -259,7 +258,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -297,7 +296,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -327,7 +326,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -473,37 +472,32 @@ impl Exchange {
     /// # Arguments
     /// * `wallet` - The wallet to sign the approval with
     /// * `agent_address` - The address of the agent to approve
-    /// * `extra_agent_name` - An optional name for the agent
+    /// * `agent_name` - An optional name for the agent
     pub async fn approve_agent(
         &self,
         wallet: Arc<LocalWallet>,
         agent_address: Address,
-        extra_agent_name: Option<String>,
+        agent_name: Option<String>,
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let connection_id = keccak256(if let Some(ref name) = extra_agent_name {
-            (agent_address, name.to_string()).encode()
-        } else {
-            agent_address.encode()
-        })
-        .into();
-
-        let action = Action::Connect {
-            chain: match self.chain {
-                Chain::Arbitrum => Chain::Arbitrum,
-                Chain::ArbitrumTestnet => Chain::ArbitrumTestnet,
-                _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
-            },
-            agent: Agent {
-                source: "https://hyperliquid.xyz".to_string(),
-                connection_id,
-            },
-            agent_address,
-            extra_agent_name,
+        let hyperliquid_chain = match self.chain {
+            Chain::Arbitrum => HyperliquidChain::Mainnet,
+            Chain::ArbitrumTestnet => HyperliquidChain::Testnet,
+            _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
         };
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let agent = ApproveAgent {
+            hyperliquid_chain,
+            signature_chain_id: 421614.into(),
+            agent_address,
+            nonce,
+            agent_name,
+        };
+
+        let signature = wallet.sign_typed_data(&agent).await?;
+
+        let action = Action::ApproveAgent(agent);
 
         let request = Request {
             action,
@@ -529,7 +523,8 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(from, connection_id).await?;
+        // FIX
+        let signature = self.sign_l1_action(from, connection_id).await?;
 
         let request = Request {
             action,
@@ -559,7 +554,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -594,7 +589,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -630,7 +625,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -656,7 +651,7 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -694,7 +689,8 @@ impl Exchange {
 
         let connection_id = action.connection_id(vault_address, nonce)?;
 
-        let signature = self.sign(wallet, connection_id).await?;
+        // FIX
+        let signature = self.sign_l1_action(wallet, connection_id).await?;
 
         let request = Request {
             action,
@@ -706,42 +702,23 @@ impl Exchange {
         self.client.post(&API::Exchange, &request).await
     }
 
-    /// Create a signature for the given connection id
-    async fn sign(&self, wallet: Arc<LocalWallet>, connection_id: H256) -> Result<Signature> {
-        let (chain, source) = match self.chain {
-            Chain::Arbitrum => (Chain::Dev, "a".to_string()),
-            Chain::Dev | Chain::ArbitrumGoerli | Chain::ArbitrumTestnet => {
-                (Chain::Dev, "b".to_string())
-            }
+    async fn sign_l1_action(
+        &self,
+        wallet: Arc<LocalWallet>,
+        connection_id: H256,
+    ) -> Result<Signature> {
+        let source = match self.chain {
+            Chain::Arbitrum => "a".to_string(),
+            Chain::ArbitrumTestnet => "b".to_string(),
             _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
         };
 
-        Ok(match chain {
-            Chain::Arbitrum => {
-                let payload = mainnet::Agent {
-                    source,
-                    connection_id,
-                };
-                wallet.sign_typed_data(&payload).await?
-            }
-            Chain::ArbitrumTestnet => {
-                let payload = testnet::Agent {
-                    source,
-                    connection_id,
-                };
-                wallet.sign_typed_data(&payload).await?
-            }
-            Chain::Dev => {
-                let payload = l1::Agent {
-                    source,
-                    connection_id,
-                };
+        let payload = l1::Agent {
+            source,
+            connection_id,
+        };
 
-                wallet.sign_typed_data(&payload).await?
-            }
-
-            _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
-        })
+        Ok(wallet.sign_typed_data(&payload).await?)
     }
 
     /// get the next nonce to use

@@ -27,6 +27,22 @@ impl ToString for Chain {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[serde(rename_all = "PascalCase")]
+pub enum HyperliquidChain {
+    Mainnet,
+    Testnet,
+}
+
+impl ToString for HyperliquidChain {
+    fn to_string(&self) -> String {
+        String::from(match self {
+            HyperliquidChain::Mainnet => "Mainnet",
+            HyperliquidChain::Testnet => "Testnet",
+        })
+    }
+}
+
 pub enum API {
     Info,
     Exchange,
@@ -49,46 +65,6 @@ pub enum Side {
     A,
 }
 pub mod agent {
-    pub mod mainnet {
-        use ethers::{
-            contract::{Eip712, EthAbiType},
-            types::H256,
-        };
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Eip712, Clone, EthAbiType, Serialize, Deserialize)]
-        #[eip712(
-            name = "Exchange",
-            version = "1",
-            chain_id = 42161,
-            verifying_contract = "0x0000000000000000000000000000000000000000"
-        )]
-        #[serde(rename_all = "camelCase")]
-        pub struct Agent {
-            pub source: String,
-            pub connection_id: H256,
-        }
-    }
-
-    pub mod testnet {
-        use ethers::{
-            contract::{Eip712, EthAbiType},
-            types::H256,
-        };
-
-        #[derive(Eip712, Clone, EthAbiType)]
-        #[eip712(
-            name = "Exchange",
-            version = "1",
-            chain_id = 421614,
-            verifying_contract = "0x0000000000000000000000000000000000000000"
-        )]
-        pub struct Agent {
-            pub source: String,
-            pub connection_id: H256,
-        }
-    }
-
     pub mod l1 {
         use ethers::{
             contract::{Eip712, EthAbiType},
@@ -587,14 +563,21 @@ pub mod info {
 
 pub mod exchange {
     pub mod request {
+
         use ethers::{
-            types::{Address, Signature, H256},
+            abi::{encode, ParamType, Token, Tokenizable},
+            types::{
+                transaction::eip712::{
+                    encode_eip712_type, make_type_hash, EIP712Domain, Eip712, Eip712Error,
+                },
+                Address, Signature, H256, U256,
+            },
             utils::keccak256,
         };
         use serde::{Deserialize, Serialize};
 
         use crate::{
-            types::{Chain, Cloid},
+            types::{Chain, Cloid, HyperliquidChain},
             utils::{as_hex, as_hex_option},
             Error, Result,
         };
@@ -735,6 +718,53 @@ pub mod exchange {
         }
 
         #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct ApproveAgent {
+            pub signature_chain_id: U256,
+            pub hyperliquid_chain: HyperliquidChain,
+            pub agent_address: Address,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub agent_name: Option<String>,
+            pub nonce: u64,
+        }
+
+        impl Eip712 for ApproveAgent {
+            type Error = Eip712Error;
+
+            fn domain(&self) -> std::result::Result<EIP712Domain, Self::Error> {
+                Ok(EIP712Domain {
+                    name: Some("HyperliquidSignTransaction".into()),
+                    version: Some("1".into()),
+                    chain_id: Some(self.signature_chain_id),
+                    verifying_contract: Some(Address::zero()),
+                    salt: None,
+                })
+            }
+
+            fn type_hash() -> std::result::Result<[u8; 32], Self::Error> {
+                Ok(make_type_hash(
+                    "HyperliquidTransaction:ApproveAgent".into(),
+                    &[
+                        ("hyperliquidChain".to_string(), ParamType::String),
+                        ("agentAddress".to_string(), ParamType::Address),
+                        ("agentName".to_string(), ParamType::String),
+                        ("nonce".to_string(), ParamType::Uint(64)),
+                    ],
+                ))
+            }
+
+            fn struct_hash(&self) -> std::result::Result<[u8; 32], Self::Error> {
+                Ok(keccak256(encode(&[
+                    Token::Uint(Self::type_hash()?.into()),
+                    encode_eip712_type(self.hyperliquid_chain.to_string().into_token()),
+                    encode_eip712_type(self.agent_address.into_token()),
+                    encode_eip712_type(self.agent_name.clone().unwrap_or_default().into_token()),
+                    encode_eip712_type(self.nonce.into_token()),
+                ])))
+            }
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase", tag = "type")]
         pub enum Action {
             Order {
@@ -780,14 +810,7 @@ pub mod exchange {
                 is_buy: bool,
                 ntli: i64,
             },
-            #[serde(rename_all = "camelCase")]
-            Connect {
-                chain: Chain,
-                agent: Agent,
-                agent_address: Address,
-                #[serde(skip_serializing_if = "Option::is_none")]
-                extra_agent_name: Option<String>,
-            },
+            ApproveAgent(ApproveAgent),
             CreateSubAccount {
                 name: String,
             },
