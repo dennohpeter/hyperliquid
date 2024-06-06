@@ -14,7 +14,7 @@ use crate::{
         exchange::{
             request::{
                 Action, ApproveAgent, CancelByCloidRequest, CancelRequest, Grouping, ModifyRequest,
-                OrderRequest, Request, TransferRequest, TwapRequest, WithdrawalRequest,
+                OrderRequest, Request, TwapRequest, UsdSend, WithdrawalRequest,
             },
             response::Response,
         },
@@ -353,44 +353,23 @@ impl Exchange {
     ) -> Result<Response> {
         let nonce = self.nonce()?;
 
-        let signature = {
-            let destination = to_checksum(&destination, None);
-            let time = nonce;
-            let amount = amount.clone();
-
-            match self.chain {
-                Chain::Arbitrum => {
-                    from.sign_typed_data(&usd_transfer::mainnet::UsdTransferSignPayload {
-                        destination,
-                        amount,
-                        time,
-                    })
-                    .await?
-                }
-                Chain::ArbitrumTestnet => {
-                    from.sign_typed_data(&usd_transfer::testnet::UsdTransferSignPayload {
-                        destination,
-                        amount,
-                        time,
-                    })
-                    .await?
-                }
-                _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
-            }
+        let hyperliquid_chain = match self.chain {
+            Chain::Arbitrum => HyperliquidChain::Mainnet,
+            Chain::ArbitrumTestnet => HyperliquidChain::Testnet,
+            _ => return Err(Error::ChainNotSupported(self.chain.to_string())),
         };
 
-        let payload = TransferRequest {
+        let payload = UsdSend {
+            signature_chain_id: 421614.into(),
+            hyperliquid_chain,
             amount,
             destination: to_checksum(&destination, None),
             time: nonce,
         };
-        let action = Action::UsdTransfer {
-            chain: match self.chain {
-                Chain::Arbitrum => Chain::Arbitrum,
-                _ => Chain::ArbitrumTestnet,
-            },
-            payload,
-        };
+
+        let signature = from.sign_typed_data(&payload).await?;
+
+        let action = Action::UsdSend(payload);
 
         let request = Request {
             action,

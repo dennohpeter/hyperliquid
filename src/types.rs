@@ -96,19 +96,6 @@ pub mod usd_transfer {
             chain_id = 42161,
             verifying_contract = "0x0000000000000000000000000000000000000000"
         )]
-        pub struct UsdTransferSignPayload {
-            pub destination: String,
-            pub amount: String,
-            pub time: u64,
-        }
-
-        #[derive(Eip712, Clone, EthAbiType)]
-        #[eip712(
-            name = "Exchange",
-            version = "1",
-            chain_id = 42161,
-            verifying_contract = "0x0000000000000000000000000000000000000000"
-        )]
         pub struct WithdrawFromBridge2SignPayload {
             pub destination: String,
             pub usd: String,
@@ -118,19 +105,6 @@ pub mod usd_transfer {
 
     pub mod testnet {
         use ethers::contract::{Eip712, EthAbiType};
-
-        #[derive(Eip712, Clone, EthAbiType)]
-        #[eip712(
-            name = "Exchange",
-            version = "1",
-            chain_id = 421614,
-            verifying_contract = "0x0000000000000000000000000000000000000000"
-        )]
-        pub struct UsdTransferSignPayload {
-            pub destination: String,
-            pub amount: String,
-            pub time: u64,
-        }
 
         #[derive(Eip712, Clone, EthAbiType)]
         #[eip712(
@@ -696,14 +670,6 @@ pub mod exchange {
 
         #[derive(Debug, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
-        pub struct TransferRequest {
-            pub destination: String,
-            pub amount: String,
-            pub time: u64,
-        }
-
-        #[derive(Debug, Serialize, Deserialize)]
-        #[serde(rename_all = "camelCase")]
         pub struct WithdrawalRequest {
             pub destination: String,
             pub usd: String,
@@ -715,6 +681,52 @@ pub mod exchange {
         pub struct Agent {
             pub source: String,
             pub connection_id: H256,
+        }
+
+        #[derive(Debug, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct UsdSend {
+            pub signature_chain_id: U256,
+            pub hyperliquid_chain: HyperliquidChain,
+            pub destination: String,
+            pub amount: String,
+            pub time: u64,
+        }
+
+        impl Eip712 for UsdSend {
+            type Error = Eip712Error;
+
+            fn domain(&self) -> std::result::Result<EIP712Domain, Self::Error> {
+                Ok(EIP712Domain {
+                    name: Some("HyperliquidSignTransaction".into()),
+                    version: Some("1".into()),
+                    chain_id: Some(self.signature_chain_id),
+                    verifying_contract: Some(Address::zero()),
+                    salt: None,
+                })
+            }
+
+            fn type_hash() -> std::result::Result<[u8; 32], Self::Error> {
+                Ok(make_type_hash(
+                    "HyperliquidTransaction:UsdSend".into(),
+                    &[
+                        ("hyperliquidChain".to_string(), ParamType::String),
+                        ("destination".to_string(), ParamType::String),
+                        ("amount".to_string(), ParamType::String),
+                        ("time".to_string(), ParamType::Uint(64)),
+                    ],
+                ))
+            }
+
+            fn struct_hash(&self) -> std::result::Result<[u8; 32], Self::Error> {
+                Ok(keccak256(encode(&[
+                    Token::Uint(Self::type_hash()?.into()),
+                    encode_eip712_type(self.hyperliquid_chain.to_string().into_token()),
+                    encode_eip712_type(self.destination.clone().into_token()),
+                    encode_eip712_type(self.amount.clone().into_token()),
+                    encode_eip712_type(self.time.into_token()),
+                ])))
+            }
         }
 
         #[derive(Debug, Serialize, Deserialize)]
@@ -786,10 +798,8 @@ pub mod exchange {
             TwapOrder {
                 twap: TwapRequest,
             },
-            UsdTransfer {
-                chain: Chain,
-                payload: TransferRequest,
-            },
+            UsdSend(UsdSend),
+
             Withdraw {
                 usd: String,
                 nonce: u64,
