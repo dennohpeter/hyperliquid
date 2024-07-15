@@ -27,9 +27,9 @@ pub async fn main() {
 
     let user = wallet.address();
 
-    let info = Hyperliquid::new(Chain::Dev);
+    let info = Hyperliquid::new(Chain::ArbitrumTestnet);
 
-    let exchange = Hyperliquid::new(Chain::Dev);
+    let exchange = Hyperliquid::new(Chain::ArbitrumTestnet);
 
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)

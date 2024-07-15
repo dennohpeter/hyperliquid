@@ -18,7 +18,7 @@ async fn main() {
             .unwrap(),
     );
 
-    let exchange: Exchange = Hyperliquid::new(Chain::Dev);
+    let exchange: Exchange = Hyperliquid::new(Chain::ArbitrumTestnet);
 
     println!("Creating subaccount...");
     let name = {
