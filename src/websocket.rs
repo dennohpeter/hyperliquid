@@ -61,7 +61,7 @@ impl Websocket {
                 self.channels
                     .get(id)
                     .ok_or_else(|| Error::NotSubscribed(*id))
-                    .map(|channel| channel.clone())
+                    .cloned()
             })
             .collect::<Result<Vec<Channel>>>()?;
 

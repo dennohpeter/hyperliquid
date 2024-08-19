@@ -14,16 +14,20 @@ pub enum Chain {
     ArbitrumNova = 42170,
 }
 
-impl ToString for Chain {
-    fn to_string(&self) -> String {
-        String::from(match self {
-            Chain::Dev => "Dev",
-            Chain::Arbitrum => "Arbitrum",
-            Chain::ArbitrumTestnet => "ArbitrumTestnet",
-            Chain::ArbitrumGoerli => "ArbitrumGoerli",
-            Chain::ArbitrumSepolia => "ArbitrumSepolia",
-            Chain::ArbitrumNova => "ArbitrumNova",
-        })
+impl std::fmt::Display for Chain {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Chain::Dev => "Dev",
+                Chain::Arbitrum => "Arbitrum",
+                Chain::ArbitrumTestnet => "ArbitrumTestnet",
+                Chain::ArbitrumGoerli => "ArbitrumGoerli",
+                Chain::ArbitrumSepolia => "ArbitrumSepolia",
+                Chain::ArbitrumNova => "ArbitrumNova",
+            }
+        )
     }
 }
 
@@ -34,12 +38,16 @@ pub enum HyperliquidChain {
     Testnet,
 }
 
-impl ToString for HyperliquidChain {
-    fn to_string(&self) -> String {
-        String::from(match self {
-            HyperliquidChain::Mainnet => "Mainnet",
-            HyperliquidChain::Testnet => "Testnet",
-        })
+impl std::fmt::Display for HyperliquidChain {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                HyperliquidChain::Mainnet => "Mainnet",
+                HyperliquidChain::Testnet => "Testnet",
+            }
+        )
     }
 }
 

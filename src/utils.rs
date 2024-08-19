@@ -60,7 +60,7 @@ pub fn parse_size(sz: f64, sz_decimals: u32) -> String {
 
 fn remove_trailing_zeros(s: &str) -> String {
     let mut s = s.to_string();
-    while s.ends_with('0') && s.contains(".") {
+    while s.ends_with('0') && s.contains('.') {
         s.pop();
     }
     if s.ends_with('.') {
