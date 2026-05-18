@@ -116,7 +116,7 @@ impl Websocket {
                     subscription: channel.sub.clone(),
                 };
 
-                let message = Message::Text(serde_json::to_string(&request)?);
+                let message = Message::Text(serde_json::to_string(&request)?.into());
 
                 stream.send(message).await?;
             }
